@@ -10,6 +10,9 @@ NC='\033[0m' # No Color
 PROJECT_NAME="webdev"
 PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+DEVELOPER_UID=$(id -u $USER)
+DEVELOPER_GID=$(id -g $USER)
+
 # Logging function
 log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') ${GREEN}[SETUP]${NC} $1"
@@ -50,10 +53,10 @@ create_project_structure() {
   sudo -u $USER mkdir -p /opt/docker/core/data/{phpmyadmin,prometheus,portainer,ollama,openwebui} || error "Failed to create core service directories."
 
   # Create production service directories
-  sudo -u $USER mkdir -p /opt/docker/production/data/{phpfpm-apache,mariadb,neo4j} || error "Failed to create production service directories."
+  sudo -u $USER mkdir -p /opt/docker/production/data/{phpfpm_apache,mariadb,neo4j} || error "Failed to create production service directories."
 
   # Create development service directories
-  sudo -u $USER mkdir -p /opt/docker/development/data/{phpfpm-apache,mariadb,neo4j} || error "Failed to create development service directories."
+  sudo -u $USER mkdir -p /opt/docker/development/data/{phpfpm_apache,mariadb,neo4j} || error "Failed to create development service directories."
 
   # Set permissions
   sudo -u $USER chmod -R 755 /opt/docker/ || error "Failed to set permissions for /opt/docker/."
@@ -69,7 +72,7 @@ generate_random_string() {
 # Generate secure passwords
 generate_secrets() {
   log "Generating secure secrets..."
-
+  
   # Core secrets
   if [ ! -f "/opt/docker/core/secrets/.portainer.env" ]; then
     sudo -u $USER touch /opt/docker/core/secrets/.portainer.env || error "Failed to create core .portainer.env."
@@ -85,16 +88,20 @@ generate_secrets() {
     sudo -u $USER touch /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to create core .phpmyadmin.env."
     echo "PMA_HOSTS=production_mariadb,development_mariadb" > /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_HOSTS to core .phpmyadmin.env."
     echo "PMA_PORTS=3306,3306" >> /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_PORTS to core .phpmyadmin.env."    
+    # echo "PMA_PMADB=development_mariadb" >> /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_PMADB to core .phpmyadmin.env."
+    # echo "PMA_CONTROLUSER=pma" >> /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_CONTROLUSER to core .phpmyadmin.env."
+    # echo "PMA_CONTROLPASS=$(generate_random_string)" >> /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_CONTROLPASS to core .phpmyadmin.env."
   fi
 
   if [ ! -f "/opt/docker/core/secrets/.ollama.env" ]; then
     sudo -u $USER touch /opt/docker/core/secrets/.ollama.env || error "Failed to create core .ollama.env."
-    echo "OLLAMA_PASSWORD=$(generate_random_string)" > /opt/docker/core/secrets/.ollama.env || error "Failed to write OLLAMA_PASSWORD to core .ollama.env."
+    echo "OLLAMA_FLASH_ATTENTION=1" > /opt/docker/core/secrets/.ollama.env || error "Failed to write OLLAMA_FLASH_ATTENTION to core .ollama.env."
   fi
 
   if [ ! -f "/opt/docker/core/secrets/.openwebui.env" ]; then
     sudo -u $USER touch /opt/docker/core/secrets/.openwebui.env || error "Failed to create core .openwebui.env."
-    echo "OPENWEBUI_PASSWORD=$(generate_random_string)" > /opt/docker/core/secrets/.openwebui.env || error "Failed to write OPENWEBUI_PASSWORD to core .openwebui.env."
+    echo "OLLAMA_BASE_URLS=http://core_ollama:11434" > /opt/docker/core/secrets/.openwebui.env || error "Failed to write OLLAMA_BASE_URLS to core .openwebui.env."
+    echo "WEBUI_SECRET_KEY=$(generate_random_string)" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write WEBUI_SECRET_KEY to core .openwebui.env."    
   fi
 
 
@@ -193,12 +200,6 @@ volumes:
       type: none
       device: /opt/docker/core/data/ollama/
       o: bind
-  host_core_tgi_storage_volume:
-    driver: local
-    driver_opts:
-      type: none
-      device: /opt/docker/core/data/tgi/
-      o: bind
   host_core_openwebui_storage_volume:
     driver: local
     driver_opts:
@@ -217,12 +218,6 @@ volumes:
       type: none
       device: /opt/docker/core/data/portainer/
       o: bind
-  host_core_docker_db_backup_storage_volume:
-    driver: local
-    driver_opts:
-      type: none
-      device: /opt/docker/core/data/docker_db_backup/
-      o: bind
       
 # Production volumes
   host_production_secrets_volume:
@@ -235,7 +230,7 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /opt/docker/production/data/phpfpm-apache/
+      device: /opt/docker/production/data/phpfpm_apache/
       o: bind
   host_production_mariadb_storage_volume:
     driver: local
@@ -261,7 +256,7 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /opt/docker/development/data/phpfpm-apache/
+      device: /opt/docker/development/data/phpfpm_apache/
       o: bind
   host_development_mariadb_storage_volume:
     driver: local
@@ -326,6 +321,8 @@ services:
 # Core Services
 
   # Core Portainer Service
+  # Accessible at: http://localhost:9000/
+  # Healthcheck status: needs work
   core_portainer:
     container_name: core_portainer
     image: portainer/portainer-ce:2.21.4
@@ -355,6 +352,8 @@ services:
       - core_monitoring_network
 
   # Core Prometheus Service
+  # Accessible at: http://localhost:32771
+  # Healthcheck status: working
   core_prometheus:
     container_name: core_prometheus
     image: prom/prometheus:v3.0.1
@@ -389,6 +388,8 @@ services:
       - core_monitoring_network
 
   # Core PhpMyAdmin Service
+  # Accessible at: http://localhost:8082
+  # Healthcheck status: working
   core_phpmyadmin:
     container_name: core_phpmyadmin
     image: phpmyadmin/phpmyadmin:5.2.1
@@ -433,6 +434,8 @@ services:
       - development_db_network
 
   # Core Ollama Service
+  # Accessible at: http://localhost:11434
+  # Healthcheck status: working
   core_ollama:
     container_name: core_ollama
     image: ollama/ollama:0.5.1
@@ -456,10 +459,17 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              device_ids: ['0', '1']
               capabilities: [gpu]
         limits:
           memory: 64G
+    # https://ollama.com/library/deepseek-coder-v2:16b - ollama pull deepseek-coder-v2:16b
+    # https://ollama.com/library/qwen2.5:7b - ollama pull qwen2.5:7b
+    # https://ollama.com/library/qwen2.5-coder:7b - ollama pull qwen2.5-coder:7b
+    # https://ollama.com/library/qwen2.5-coder:14b - ollama pull qwen2.5-coder:14b
+    # https://ollama.com/library/qwen2.5-coder:32b - ollama pull qwen2.5-coder:32b
+    # https://ollama.com/library/llama3.2:3b - ollama pull llama3.2:3b
+    # https://ollama.com/library/phi3.5:3.8b - ollama pull phi3.5:3.8b
     entrypoint: /bin/sh
     command: >
       -c "
@@ -476,9 +486,18 @@ services:
       /bin/ollama pull qwen2.5-coder:7b &
       echo '🟢 Done pulling qwen2.5-coder:7b model!' &
       /bin/ollama list &
+      echo '🔴 Pulling qwen2.5-coder:14b model...' &
+      /bin/ollama pull qwen2.5-coder:14b &
+      echo '🟢 Done pulling qwen2.5-coder:14b model!' &
+      /bin/ollama list &      
       echo '🔴 Pulling llama3.2:3b model...' &
       /bin/ollama pull llama3.2:3b &
       echo '🟢 Done pulling llama3.2:3b model!' &
+      /bin/ollama list &      
+      echo '🔴 Pulling phi3.5:3.8b model...' &
+      /bin/ollama pull phi3.5:3.8b &
+      echo '🟢 Done pulling phi3.5:3.8b model!' &
+      /bin/ollama list &      
       echo 'Model preloading complete.' &
       wait $pid
       "
@@ -501,6 +520,8 @@ services:
       - development_app_network
 
   # Core OpenWebUI Service
+  # Accessible at: http://localhost:11435
+  # Healthcheck status: working
   core_openwebui:
     container_name: core_openwebui
     image: ghcr.io/open-webui/open-webui:main
@@ -542,6 +563,8 @@ services:
 
 # Production Services
   # Production PHP-fpm Apache2
+  # Accessible at: http://localhost:8080
+  # Healthcheck status: needs work
   production_phpfpm_apache:
     <<: *common_phpfpm_apache
     env_file:
@@ -560,10 +583,12 @@ services:
       start_period: 40s
     ports:
       - "8080:80"
-    volumes:
-      - host_production_phpfpm_apache_storage_volume:/var/www/html
-      - host_production_phpfpm_apache_storage_volume:/usr/local/etc/php
-      - host_production_phpfpm_apache_storage_volume:/usr/local/apache2/conf
+      - "8443:443"
+      - "8443:443/udp"
+    #volumes:
+    #  - host_production_phpfpm_apache_storage_volume:/var/www/html
+    #  - host_production_phpfpm_apache_storage_volume:/usr/local/etc/php
+    #  - host_production_phpfpm_apache_storage_volume:/usr/local/apache2/conf
     depends_on:
       core_prometheus:
         condition: service_healthy
@@ -576,6 +601,8 @@ services:
       - production_app_network      
 
   # Production MariaDB
+  # Accessible at: http://localhost:3306
+  # Healthcheck status: working
   production_mariadb:
     <<: *common_mariadb
     env_file:
@@ -609,6 +636,8 @@ services:
       - production_db_network
 
   # Production Neo4j
+  # Accessible at: http://localhost:7474
+  # Healthcheck status: needs work
   production_neo4j:
     <<: *common_neo4j
     env_file:
@@ -640,6 +669,8 @@ services:
 
 # Development Services
   # Development PHP-fpm Apache2
+  # Accessible at: http://localhost:8081
+  # Healthcheck status: working
   development_phpfpm_apache:
     <<: *common_phpfpm_apache
     env_file:
@@ -658,10 +689,12 @@ services:
       start_period: 40s
     ports:
       - "8081:80"
-    volumes:
-      - host_development_phpfpm_apache_storage_volume:/var/www/html
-      - host_development_phpfpm_apache_storage_volume:/usr/local/etc/php
-      - host_development_phpfpm_apache_storage_volume:/usr/local/apache2/conf
+      - "8444:443"
+      - "8444:443/udp"
+    #volumes:
+    #  - host_development_phpfpm_apache_storage_volume:/var/www/html
+    #  - host_development_phpfpm_apache_storage_volume:/usr/local/etc/php
+    #  - host_development_phpfpm_apache_storage_volume:/usr/local/apache2/conf
     depends_on:
       core_prometheus:
         condition: service_healthy
@@ -674,6 +707,8 @@ services:
       - development_app_network
 
   # Development MariaDB
+  # Accessible at: http://localhost:3307
+  # Healthcheck status: working
   development_mariadb:
     <<: *common_mariadb
     env_file:
@@ -707,6 +742,8 @@ services:
       - development_db_network
 
   # Development Neo4j
+  # Accessible at: http://localhost:7475
+  # Healthcheck status: needs work
   development_neo4j:
     <<: *common_neo4j
     env_file:
@@ -717,12 +754,6 @@ services:
       - "local.service.description=Development Neo4j database server for knowledge graphs. The purpose of this service is to provide augment the memory of languege models with long-term memory, and enhancing of responses and recall accuracy. Certain directories for this service are made available to the host machine for the purposes of data persistence."
       - "local.service.source.url=https://github.com/neo4j/neo4j"
       - "portainer.agent.stack=true"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7474/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     ports:
       - "7475:7474"
       - "7688:7687"
