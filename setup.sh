@@ -41,6 +41,9 @@ create_project_structure() {
   log "Creating project core directory structure..."
   
   # Create base directories
+  sudo mkdir -p /opt/docker || error "Failed to create base directory."
+  sudo chown -R $USER:$USER /opt/docker || error "Failed to set ownership for /opt/docker."
+
   sudo -u $USER mkdir -p /opt/docker/{core,production,development}/{data,secrets} || error "Failed to create base directories."
 
   # Create core service directories
@@ -80,10 +83,8 @@ generate_secrets() {
 
   if [ ! -f "/opt/docker/core/secrets/.phpmyadmin.env" ]; then    
     sudo -u $USER touch /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to create core .phpmyadmin.env."
-    echo "PMA_ARBITRARY=1" > /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_ARBITRARY to core .phpmyadmin.env."
-    echo "PMA_HOST=core_mariadb" >> /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_HOST to core .phpmyadmin.env."
-    echo "PMA_PORT=3306" >> /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_PORT to core .phpmyadmin.env."
-    echo "PMA_PASSWORD=$(generate_random_string)" >> /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_PASSWORD to core .phpmyadmin.env."
+    echo "PMA_HOSTS=production_mariadb,development_mariadb" > /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_HOSTS to core .phpmyadmin.env."
+    echo "PMA_PORTS=3306,3306" >> /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_PORTS to core .phpmyadmin.env."    
   fi
 
   if [ ! -f "/opt/docker/core/secrets/.ollama.env" ]; then
@@ -109,15 +110,14 @@ generate_secrets() {
 
   if [ ! -f "/opt/docker/production/secrets/.neo4j.env" ]; then
     sudo -u $USER touch /opt/docker/production/secrets/.neo4j.env || error "Failed to create production .neo4j.env."
-    echo "NEO4J_AUTH=neo4j/$(generate_random_string)" > /opt/docker/production/secrets/.neo4j.env || error "Failed to write NEO4J_AUTH to production .neo4j.env."
-    echo "NEO4J_USER=neo4j" >> /opt/docker/production/secrets/.neo4j.env || error "Failed to write NEO4J_USER to production .neo4j.env."
-    echo "NEO4J_PASSWORD=$(generate_random_string)" >> /opt/docker/production/secrets/.neo4j.env || error "Failed to write NEO4J_PASSWORD to production .neo4j.env."
+    echo "NEO4J_AUTH=neo4j/$(generate_random_string)" > /opt/docker/production/secrets/.neo4j.env || error "Failed to write NEO4J_AUTH to production .neo4j.env."    
   fi
 
-  if [ ! -f "/opt/docker/production/secrets/.phpfpm-apache.env" ]; then
-    sudo -u $USER touch /opt/docker/production/secrets/.phpfpm-apache.env || error "Failed to create production .phpfpm-apache.env."
-    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > /opt/docker/production/secrets/.phpfpm-apache.env || error "Failed to write PHP_FPM_PASSWORD to production .phpfpm-apache.env."
-    echo "APACHE2_PASSWORD=$(generate_random_string)" > /opt/docker/production/secrets/.phpfpm-apache.env || error "Failed to write APACHE2_PASSWORD to production .phpfpm-apache.env."
+  if [ ! -f "/opt/docker/production/secrets/.phpfpm_apache.env" ]; then
+    sudo -u $USER touch /opt/docker/production/secrets/.phpfpm_apache.env || error "Failed to create production .phpfpm_apache.env."
+    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > /opt/docker/production/secrets/.phpfpm_apache.env || error "Failed to write PHP_FPM_PASSWORD to production .phpfpm_apache.env."
+    echo "APACHE2_PASSWORD=$(generate_random_string)" >> /opt/docker/production/secrets/.phpfpm_apache.env || error "Failed to write APACHE2_PASSWORD to production .phpfpm_apache.env." 
+    
   fi
 
 
@@ -134,14 +134,13 @@ generate_secrets() {
   if [ ! -f "/opt/docker/development/secrets/.neo4j.env" ]; then
     sudo -u $USER touch /opt/docker/development/secrets/.neo4j.env || error "Failed to create development.neo4j.env."
     echo "NEO4J_AUTH=neo4j/$(generate_random_string)" > /opt/docker/development/secrets/.neo4j.env || error "Failed to write NEO4J_AUTH to development .neo4j.env."
-    echo "NEO4J_USER=neo4j" >> /opt/docker/development/secrets/.neo4j.env || error "Failed to write NEO4J_USER to development .neo4j.env."
-    echo "NEO4J_PASSWORD=$(generate_random_string)" >> /opt/docker/development/secrets/.neo4j.env || error "Failed to write NEO4J_PASSWORD to development .neo4j.env."
   fi
 
-  if [ ! -f "/opt/docker/development/secrets/.phpfpm-apache.env" ]; then
-    sudo -u $USER touch /opt/docker/development/secrets/.phpfpm-apache.env || error "Failed to create development .phpfpm-apache.env."
-    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > /opt/docker/development/secrets/.phpfpm-apache.env || error "Failed to write PHP_FPM_PASSWORD to development .phpfpm-apache.env."
-    echo "APACHE2_PASSWORD=$(generate_random_string)" > /opt/docker/development/secrets/.phpfpm-apache.env || error "Failed to write APACHE2_PASSWORD to development .phpfpm-apache.env."
+  if [ ! -f "/opt/docker/development/secrets/.phpfpm_apache.env" ]; then
+    sudo -u $USER touch /opt/docker/development/secrets/.phpfpm_apache.env || error "Failed to create development .phpfpm_apache.env."
+    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > /opt/docker/development/secrets/.phpfpm_apache.env || error "Failed to write PHP_FPM_PASSWORD to development .phpfpm_apache.env."
+    echo "APACHE2_PASSWORD=$(generate_random_string)" >> /opt/docker/development/secrets/.phpfpm_apache.env || error "Failed to write APACHE2_PASSWORD to development .phpfpm_apache.env."
+      
   fi
 
   # Set specific permissions for secrets directories
@@ -155,13 +154,19 @@ generate_secrets() {
 # TODO: Add TGI v3 for llm long context handling on ai_network
 # TODO: Add tiredofit/docker-db-backup for database backups
 # FIX: OpenWebUI healthcheck is failing despite service functioning fine
-# TODO: automatically had ollama pull specific models when container is first created qwen2.5:7b, qwen2.5-coder:7b, llama3.2:3b
+# TODO: automatically had ollama pull specific models when container is first created qwen2.5:7b, qwen2.5-coder:7b, llama3.2:3b, llama3.2-vision:11b-instruct-q4_K_M
 create_docker_configs() {
 log "Creating Docker configuration files..."
 
-cat > docker-compose.yml << 'EOF'
-version: '3.8'
-
+cat > docker-compose.yml << EOF
+# sudo -S docker compose down --remove-orphans
+# sudo -S docker system prune -af
+# sudo -S docker ps -a && echo '=== Images ===' && echo darkness | sudo -S docker images && echo '=== Networks ===' && echo darkness | sudo -S docker network ls
+# sudo rm -rf /opt/docker/*
+# cd /mnt/d/backup/local_files/Documents/WSL && bash docker-setup-script-v1.1.sh
+# cd /mnt/d/backup/local_files/Documents/WSL && sudo -S docker compose up -d
+# docker logs production_mariadb
+# docker exec core_ollama ollama list
 volumes:
 # Core volumes
   host_core_storage_volume:
@@ -279,7 +284,7 @@ x-logging: &default-logging
     max-file: "3"
     tag: "{{.Name}}/{{.ID}}"  
 
-x-common-phpfpm-apache: &common-phpfpm-apache
+x-common_phpfpm_apache: &common_phpfpm_apache
   image: shinsenter/phpfpm-apache:php8
   restart: unless-stopped
   deploy:
@@ -291,7 +296,7 @@ x-common-phpfpm-apache: &common-phpfpm-apache
     core_prometheus:
       condition: service_healthy 
 
-x-common-mariadb: &common-mariadb        
+x-common_mariadb: &common_mariadb        
   image: mariadb:10.6
   restart: unless-stopped
   deploy:
@@ -303,7 +308,7 @@ x-common-mariadb: &common-mariadb
     core_prometheus:
       condition: service_healthy
 
-x-common-neo4j: &common-neo4j
+x-common_neo4j: &common_neo4j
   image: neo4j:5.7.0-community
   restart: unless-stopped
   deploy:
@@ -332,12 +337,6 @@ services:
     restart: unless-stopped
     env_file:
       - /opt/docker/core/secrets/.portainer.env
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     ports:
       - "9000:9000"
     volumes:
@@ -413,9 +412,9 @@ services:
     depends_on:
       core_prometheus:
         condition: service_healthy
-      production-mariadb:
+      production_mariadb:
         condition: service_healthy
-      development-mariadb:
+      development_mariadb:
         condition: service_healthy
     ports:
       - "8082:80"  
@@ -461,8 +460,30 @@ services:
               capabilities: [gpu]
         limits:
           memory: 64G
+    entrypoint: /bin/sh
+    command: >
+      -c "
+      /bin/ollama serve &
+      pid=$! &
+      sleep 10 &
+      /bin/ollama list &
+      echo 'Preloading models...' &
+      echo '🔴 Pulling qwen2.5:7b model...' &
+      /bin/ollama pull qwen2.5:7b &
+      echo '🟢 Done pulling qwen2.5:7b model!' &
+      /bin/ollama list &
+      echo '🔴 Pulling qwen2.5-coder:7b model...' &
+      /bin/ollama pull qwen2.5-coder:7b &
+      echo '🟢 Done pulling qwen2.5-coder:7b model!' &
+      /bin/ollama list &
+      echo '🔴 Pulling llama3.2:3b model...' &
+      /bin/ollama pull llama3.2:3b &
+      echo '🟢 Done pulling llama3.2:3b model!' &
+      echo 'Model preloading complete.' &
+      wait $pid
+      "
     ports:
-      - "11434"
+      - "11434:11434"
     volumes:
       - host_core_ollama_storage_volume:/root/.ollama
       - host_core_ollama_storage_volume:/data
@@ -472,7 +493,7 @@ services:
     logging:
       <<: *default-logging
       options:
-        tag: "core-llm_server/{{.Name}}"  
+        tag: "core-llm-server/{{.Name}}"  
     networks:
       - core_monitoring_network      
       - core_ai_network
@@ -492,10 +513,11 @@ services:
     env_file:
       - /opt/docker/core/secrets/.openwebui.env
     healthcheck:  
-      test: ["CMD-SHELL", "pidof python3 || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/auth || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     ports:
       - "11435:8080"
     volumes:
@@ -513,18 +535,18 @@ services:
     logging:
       <<: *default-logging
       options:
-        tag: "core-llm_ui/{{.Name}}"  
+        tag: "core-llm-ui/{{.Name}}"  
     networks:
       - core_monitoring_network
       - core_ai_network
 
 # Production Services
   # Production PHP-fpm Apache2
-  production-phpfpm-apache:
-    <<: *common-phpfpm-apache
+  production_phpfpm_apache:
+    <<: *common_phpfpm_apache
     env_file:
-      - /opt/docker/production/secrets/.phpfpm-apache.env
-    container_name: production-phpfpm-apache  
+      - /opt/docker/production/secrets/.phpfpm_apache.env
+    container_name: production_phpfpm_apache  
     labels:
       - "local.service.name=Production - Web Server: PHP-fpm Apache2"
       - "local.service.description=Production PHP-fpm Apache2 web server. Certain directories for this service are made available to the host machine for the purposes of data persistence."      
@@ -539,9 +561,9 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - host_production_phpfpm_apache_storage_volume:/usr/local/apache2/conf:ro
-      - host_production_phpfpm_apache_storage_volume:/var/www/html:ro
-      - host_production_phpfpm_apache_storage_volume:/var/www:ro
+      - host_production_phpfpm_apache_storage_volume:/var/www/html
+      - host_production_phpfpm_apache_storage_volume:/usr/local/etc/php
+      - host_production_phpfpm_apache_storage_volume:/usr/local/apache2/conf
     depends_on:
       core_prometheus:
         condition: service_healthy
@@ -554,11 +576,11 @@ services:
       - production_app_network      
 
   # Production MariaDB
-  production-mariadb:
-    <<: *common-mariadb
+  production_mariadb:
+    <<: *common_mariadb
     env_file:
       - /opt/docker/production/secrets/.mariadb.env
-    container_name: production-mariadb    
+    container_name: production_mariadb    
     labels:
       - "local.service.name=Production - DB Server: MariaDB"
       - "local.service.description=Production MariaDB database server. Certain directories for this service are made available to the host machine for the purposes of data persistence."
@@ -587,22 +609,16 @@ services:
       - production_db_network
 
   # Production Neo4j
-  production-neo4j:
-    <<: *common-neo4j
+  production_neo4j:
+    <<: *common_neo4j
     env_file:
       - /opt/docker/production/secrets/.neo4j.env
-    container_name: production-neo4j    
+    container_name: production_neo4j    
     labels:
       - "local.service.name=Production - DB Server: Neo4j"
       - "local.service.description=Production Neo4j database server for knowledge graphs. The purpose of this service is to provide augment the memory of languege models with long-term memory, and enhancing of responses and recall accuracy. Certain directories for this service are made available to the host machine for the purposes of data persistence."
       - "local.service.source.url=https://github.com/neo4j/neo4j"
       - "portainer.agent.stack=true"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7474/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     ports:
       - "7474:7474"
       - "7687:7687"
@@ -624,11 +640,11 @@ services:
 
 # Development Services
   # Development PHP-fpm Apache2
-  development-phpfpm-apache:
-    <<: *common-phpfpm-apache
+  development_phpfpm_apache:
+    <<: *common_phpfpm_apache
     env_file:
-      - /opt/docker/development/secrets/.phpfpm-apache.env
-    container_name: development-phpfpm-apache  
+      - /opt/docker/development/secrets/.phpfpm_apache.env
+    container_name: development_phpfpm_apache  
     labels:
       - "local.service.name=Development - Web Server: PHP-fpm Apache2"
       - "local.service.description=Development web server. Certain directories for this service are made available to the host machine for the purposes of data persistence."      
@@ -643,9 +659,9 @@ services:
     ports:
       - "8081:80"
     volumes:
-      - host_development_phpfpm_apache_storage_volume:/usr/local/apache2/conf:ro
-      - host_development_phpfpm_apache_storage_volume:/var/www/html:ro
-      - host_development_phpfpm_apache_storage_volume:/var/www:ro 
+      - host_development_phpfpm_apache_storage_volume:/var/www/html
+      - host_development_phpfpm_apache_storage_volume:/usr/local/etc/php
+      - host_development_phpfpm_apache_storage_volume:/usr/local/apache2/conf
     depends_on:
       core_prometheus:
         condition: service_healthy
@@ -658,11 +674,11 @@ services:
       - development_app_network
 
   # Development MariaDB
-  development-mariadb:
-    <<: *common-mariadb
+  development_mariadb:
+    <<: *common_mariadb
     env_file:
       - /opt/docker/development/secrets/.mariadb.env
-    container_name: development-mariadb    
+    container_name: development_mariadb    
     labels:
       - "local.service.name=Development - DB Server: MariaDB"
       - "local.service.description=Development MariaDB database server. Certain directories for this service are made available to the host machine for the purposes of data persistence."
@@ -691,11 +707,11 @@ services:
       - development_db_network
 
   # Development Neo4j
-  development-neo4j:
-    <<: *common-neo4j
+  development_neo4j:
+    <<: *common_neo4j
     env_file:
       - /opt/docker/development/secrets/.neo4j.env
-    container_name: development-neo4j    
+    container_name: development_neo4j    
     labels:
       - "local.service.name=Development - DB Server: Neo4j"
       - "local.service.description=Development Neo4j database server for knowledge graphs. The purpose of this service is to provide augment the memory of languege models with long-term memory, and enhancing of responses and recall accuracy. Certain directories for this service are made available to the host machine for the purposes of data persistence."
