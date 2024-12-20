@@ -10,8 +10,8 @@ NC='\033[0m' # No Color
 PROJECT_NAME="webdev"
 PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-DEVELOPER_UID=$(id -u $USER)
-DEVELOPER_GID=$(id -g $USER)
+USER_UID=$(id -u $USER)
+USER_GID=$(id -g $USER)
 
 # Logging function
 log() {
@@ -50,7 +50,7 @@ create_project_structure() {
   sudo -u $USER mkdir -p /opt/docker/{core,production,development}/{data,secrets} || error "Failed to create base directories."
 
   # Create core service directories
-  sudo -u $USER mkdir -p /opt/docker/core/data/{phpmyadmin,prometheus,portainer,ollama,openwebui} || error "Failed to create core service directories."
+  sudo -u $USER mkdir -p /opt/docker/core/data/{portainer,prometheus,searxng,phpmyadmin,ollama,openwebui} || error "Failed to create core service directories."
 
   # Create production service directories
   sudo -u $USER mkdir -p /opt/docker/production/data/{phpfpm_apache,mariadb,neo4j} || error "Failed to create production service directories."
@@ -84,6 +84,16 @@ generate_secrets() {
     echo "PROMETHEUS_PASSWORD=$(generate_random_string)" > /opt/docker/core/secrets/.prometheus.env || error "Failed to write PROMETHEUS_PASSWORD to core .prometheus.env."
   fi
 
+  if [ ! -f "/opt/docker/core/secrets/.searxng.env" ]; then
+    sudo -u $USER touch /opt/docker/core/secrets/.searxng.env || error "Failed to create core .searxng.env."
+    echo "SEARXNG_BASE_URL=http://localhost:8083" > /opt/docker/core/secrets/.searxng.env || error "Failed to write BASE_URL to core .searxng.env."
+    echo "INSTANCE_NAME=JTTW SearxNG" >> /opt/docker/core/secrets/.searxng.env || error "Failed to write INSTANCE_NAME to core .searxng.env."
+    echo "UWSGI_WORKERS=4" >> /opt/docker/core/secrets/.searxng.env || error "Failed to write UWSGI_WORKERS to core .searxng.env."
+    echo "UWSGI_THREADS=4" >> /opt/docker/core/secrets/.searxng.env || error "Failed to write UWSGI_THREADS to core .searxng.env."
+    echo "SEARXNG_SEARCH_FORMATS=html,json" >> /opt/docker/core/secrets/.searxng.env || error "Failed to write SEARXNG_SETTINGS_SEARCH__FORMATS to core .searxng.env."
+    echo "SEARXNG_SEARCH_DEFAULT_FORMAT=html" >> /opt/docker/core/secrets/.searxng.env || error "Failed to write SEARXNG_SETTINGS_SEARCH__DEFAULT_FORMAT to core .searxng.env."
+  fi
+
   if [ ! -f "/opt/docker/core/secrets/.phpmyadmin.env" ]; then    
     sudo -u $USER touch /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to create core .phpmyadmin.env."
     echo "PMA_HOSTS=production_mariadb,development_mariadb" > /opt/docker/core/secrets/.phpmyadmin.env || error "Failed to write PMA_HOSTS to core .phpmyadmin.env."
@@ -100,8 +110,19 @@ generate_secrets() {
 
   if [ ! -f "/opt/docker/core/secrets/.openwebui.env" ]; then
     sudo -u $USER touch /opt/docker/core/secrets/.openwebui.env || error "Failed to create core .openwebui.env."
-    echo "OLLAMA_BASE_URLS=http://core_ollama:11434" > /opt/docker/core/secrets/.openwebui.env || error "Failed to write OLLAMA_BASE_URLS to core .openwebui.env."
     echo "WEBUI_SECRET_KEY=$(generate_random_string)" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write WEBUI_SECRET_KEY to core .openwebui.env."    
+    echo "OLLAMA_BASE_URLS=http://core_ollama:11434" > /opt/docker/core/secrets/.openwebui.env || error "Failed to write OLLAMA_BASE_URLS to core .openwebui.env."
+    echo "RAG_EMBEDDING_ENGINE=ollama" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write RAG_EMBEDDING_ENGINE to core .openwebui.env."
+    echo "RAG_OLLAMA_BASE_URL=http://core_ollama:11434" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write RAG_OPENAI_API_BASE_URL to core .openwebui.env."
+    echo "RAG_EMBEDDING_MODEL=mxbai-embed-large" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write RAG_EMBEDDING_MODEL to core .openwebui.env."
+    echo "ENABLE_RAG_WEB_SEARCH=True" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write ENABLE_RAG_WEB_SEARCH to core .openwebui.env."
+    echo "ENABLE_SEARCH_QUERY=True" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write ENABLE_SEARCH_QUERY to core .openwebui.env."
+    echo "RAG_WEB_SEARCH_ENGINE=duckduckgo" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_ENGINE to core .openwebui.env."
+    # To enable searxng searching, we need to uncomments the following lines and edit the searxng /opt/docker/core/data/searxng/settings.yml file to add json to formats:
+    # echo "RAG_WEB_SEARCH_ENGINE=searxng" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_ENGINE to core .openwebui.env."
+    # echo "SEARXNG_QUERY_URL=http://core_searxng:8083/search?q=<query>" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write SEARXNG_QUERY_URL to core .openwebui.env."
+    # echo "RAG_WEB_SEARCH_RESULT_COUNT=3" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_RESULT_COUNT to core .openwebui.env."
+    # echo "RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10" >> /opt/docker/core/secrets/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_CONCURRENT_REQUESTS to core .openwebui.env."
   fi
 
 
@@ -187,7 +208,25 @@ volumes:
     driver_opts:
       type: none
       device: /opt/docker/core/secrets/
-      o: bind 
+      o: bind
+  host_core_portainer_storage_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: /opt/docker/core/data/portainer/
+      o: bind
+  host_core_prometheus_storage_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: /opt/docker/core/data/prometheus/
+      o: bind      
+  host_core_searxng_storage_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: /opt/docker/core/data/searxng/
+      o: bind
   host_core_phpmyadmin_storage_volume:
     driver: local
     driver_opts:
@@ -205,19 +244,7 @@ volumes:
     driver_opts:
       type: none
       device: /opt/docker/core/data/openwebui/
-      o: bind      
-  host_core_prometheus_storage_volume:
-    driver: local
-    driver_opts:
-      type: none
-      device: /opt/docker/core/data/prometheus/
-      o: bind
-  host_core_portainer_storage_volume:
-    driver: local
-    driver_opts:
-      type: none
-      device: /opt/docker/core/data/portainer/
-      o: bind
+      o: bind          
       
 # Production volumes
   host_production_secrets_volume:
@@ -275,8 +302,8 @@ volumes:
 x-logging: &default-logging
   driver: "json-file"
   options:
-    max-size: "20m"
-    max-file: "3"
+    max-size: "1m"
+    max-file: "1"
     tag: "{{.Name}}/{{.ID}}"  
 
 x-common_phpfpm_apache: &common_phpfpm_apache
@@ -387,6 +414,43 @@ services:
     networks:
       - core_monitoring_network
 
+  # Core SearxNG Service
+  # Accessible at: http://localhost:8080
+  # Healthcheck status: working
+  core_searxng:
+    container_name: core_searxng
+    image: searxng/searxng:2024.12.16-65c970bdf
+    labels:
+      - "local.service.name=Core - Search Engine: SearxNG"
+      - "local.service.description=Core SearxNG search engine for searching the web. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.source.url=https://github.com/searxng/searxng"
+      - "portainer.agent.stack=true"
+    restart: unless-stopped
+    env_file:
+      - /opt/docker/core/secrets/.searxng.env
+    depends_on:
+      core_prometheus:
+        condition: service_healthy
+    ports:
+      - "8083:8080"
+    volumes:
+      - host_core_searxng_storage_volume:/etc/searxng:rw
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    logging:
+      <<: *default-logging
+      options:
+        tag: "core-search/{{.Name}}"  
+    networks:
+      - core_monitoring_network
+      - core_ai_network
+      - production_db_network
+      - development_db_network  
+
+
   # Core PhpMyAdmin Service
   # Accessible at: http://localhost:8082
   # Healthcheck status: working
@@ -463,6 +527,7 @@ services:
               capabilities: [gpu]
         limits:
           memory: 64G
+    # https://ollama.com/library/mxbai-embed-large - ollama pull mxbai-embed-large
     # https://ollama.com/library/deepseek-coder-v2:16b - ollama pull deepseek-coder-v2:16b
     # https://ollama.com/library/qwen2.5:7b - ollama pull qwen2.5:7b
     # https://ollama.com/library/qwen2.5-coder:7b - ollama pull qwen2.5-coder:7b
@@ -478,18 +543,10 @@ services:
       sleep 10 &
       /bin/ollama list &
       echo 'Preloading models...' &
-      echo '🔴 Pulling qwen2.5:7b model...' &
-      /bin/ollama pull qwen2.5:7b &
-      echo '🟢 Done pulling qwen2.5:7b model!' &
+      echo '🔴 Pulling mxbai-embed-large model...' &
+      /bin/ollama pull mxbai-embed-large &
+      echo '🟢 Done pulling mxbai-embed-large model!' &
       /bin/ollama list &
-      echo '🔴 Pulling qwen2.5-coder:7b model...' &
-      /bin/ollama pull qwen2.5-coder:7b &
-      echo '🟢 Done pulling qwen2.5-coder:7b model!' &
-      /bin/ollama list &
-      echo '🔴 Pulling qwen2.5-coder:14b model...' &
-      /bin/ollama pull qwen2.5-coder:14b &
-      echo '🟢 Done pulling qwen2.5-coder:14b model!' &
-      /bin/ollama list &      
       echo '🔴 Pulling llama3.2:3b model...' &
       /bin/ollama pull llama3.2:3b &
       echo '🟢 Done pulling llama3.2:3b model!' &
@@ -497,7 +554,7 @@ services:
       echo '🔴 Pulling phi3.5:3.8b model...' &
       /bin/ollama pull phi3.5:3.8b &
       echo '🟢 Done pulling phi3.5:3.8b model!' &
-      /bin/ollama list &      
+      /bin/ollama list &                   
       echo 'Model preloading complete.' &
       wait $pid
       "
@@ -541,8 +598,6 @@ services:
       start_period: 40s
     ports:
       - "11435:8080"
-    volumes:
-      - host_core_openwebui_storage_volume:/app/backend/data
     depends_on:
       core_prometheus:
         condition: service_healthy
