@@ -178,15 +178,10 @@ generate_secrets() {
 }
 
 # Create Docker configuration files
-# TODO: Add zrok for zero-trust tunneling on remote_access_nework
-# TODO: Add TGI v3 for llm long context handling on ai_network
-# TODO: Add tiredofit/docker-db-backup for database backups
-# FIX: OpenWebUI healthcheck is failing despite service functioning fine
-# TODO: automatically had ollama pull specific models when container is first created qwen2.5:7b, qwen2.5-coder:7b, llama3.2:3b, llama3.2-vision:11b-instruct-q4_K_M
 create_docker_configs() {
-log "Creating Docker configuration files..."
+  log "Creating Docker configuration files..."
 
-cat > docker-compose.yml << EOF
+  cat > docker-compose.yml << EOF
 # sudo -S docker compose down --remove-orphans
 # sudo -S docker system prune -af
 # sudo -S docker ps -a && echo '=== Images ===' && echo darkness | sudo -S docker images && echo '=== Networks ===' && echo darkness | sudo -S docker network ls
@@ -511,8 +506,109 @@ services:
     restart: unless-stopped
     env_file:
       - /opt/docker/core/secrets/.ollama.env
+    entrypoint: /bin/sh
+    command: |
+      -c '
+      # Define all functions
+      check_server() {
+        curl -s http://localhost:11434/api/version >/dev/null 2>&1
+      }
+      
+      wait_for_server() {
+        max_attempts=30
+        attempt=1
+        echo "Waiting for Ollama server to be ready..."
+        while [ $attempt -le $max_attempts ]; do
+          if check_server; then
+            echo "Ollama server is ready!"
+            return 0
+          fi
+          echo "Attempt $attempt/$max_attempts: Server not ready, waiting..."
+          sleep 10
+          attempt=$((attempt + 1))
+        done
+        echo "Failed to connect to Ollama server after multiple attempts"
+        return 1
+      }
+      
+      download_model() {
+        local model="$1"
+        local max_retries=3
+        local retry=1
+        
+        while [ $retry -le $max_retries ]; do
+          echo "Downloading model '"$model"' (attempt $retry/$max_retries)..."
+          if /bin/ollama pull "$model"; then
+            echo "Successfully downloaded model '"$model"'"
+            return 0
+          fi
+          echo "Failed to download model '"$model"' on attempt $retry"
+          retry=$((retry + 1))
+          [ $retry -le $max_retries ] && sleep 5
+        done
+        return 1
+      }
+      
+      echo "Starting Ollama server..."
+      
+      # Install required packages quietly
+      if ! command -v curl >/dev/null || ! command -v nc >/dev/null; then
+        apt-get update -qq && apt-get install -qq -y curl netcat-traditional >/dev/null 2>&1
+      fi
+            
+      # Start the server
+      /bin/ollama serve &
+      server_pid=$!
+      
+      # Wait for server to be ready
+      if ! wait_for_server; then
+        echo "Server failed to start"
+        exit 1
+      fi
+      
+      # Download models sequentially with error handling
+      echo "Starting model downloads..."
+      download_errors=0
+      
+      # Test ollama command
+      echo "Testing ollama command..."
+      /bin/ollama --version
+      
+      # Download models one by one
+      echo "Downloading mxbai-embed-large..."
+      if ! /bin/ollama pull mxbai-embed-large; then
+        echo "Failed to download mxbai-embed-large"
+        download_errors=$((download_errors + 1))
+      fi
+      
+      echo "Downloading llama3.2:3b..."
+      if ! /bin/ollama pull llama3.2:3b; then
+        echo "Failed to download llama3.2:3b"
+        download_errors=$((download_errors + 1))
+      fi
+      
+      echo "Downloading phi3.5:3.8b..."
+      if ! /bin/ollama pull phi3.5:3.8b; then
+        echo "Failed to download phi3.5:3.8b"
+        download_errors=$((download_errors + 1))
+      fi
+
+      # Report final status
+      if [ "$download_errors" = "0" ]; then
+        echo "All models downloaded successfully!"
+      else
+        echo "Warning: $download_errors model(s) failed to download"
+      fi
+      
+      # Keep container running
+      wait $server_pid'
+    ports:
+      - "11434:11434"
+    volumes:
+      - host_core_ollama_storage_volume:/root/.ollama
+      - host_core_ollama_storage_volume:/data
     healthcheck:
-      test: ["CMD-SHELL", "pidof ollama || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/version || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -527,42 +623,6 @@ services:
               capabilities: [gpu]
         limits:
           memory: 64G
-    # https://ollama.com/library/mxbai-embed-large - ollama pull mxbai-embed-large
-    # https://ollama.com/library/deepseek-coder-v2:16b - ollama pull deepseek-coder-v2:16b
-    # https://ollama.com/library/qwen2.5:7b - ollama pull qwen2.5:7b
-    # https://ollama.com/library/qwen2.5-coder:7b - ollama pull qwen2.5-coder:7b
-    # https://ollama.com/library/qwen2.5-coder:14b - ollama pull qwen2.5-coder:14b
-    # https://ollama.com/library/qwen2.5-coder:32b - ollama pull qwen2.5-coder:32b
-    # https://ollama.com/library/llama3.2:3b - ollama pull llama3.2:3b
-    # https://ollama.com/library/phi3.5:3.8b - ollama pull phi3.5:3.8b
-    entrypoint: /bin/sh
-    command: >
-      -c "
-      /bin/ollama serve &
-      pid=$! &
-      sleep 10 &
-      /bin/ollama list &
-      echo 'Preloading models...' &
-      echo '🔴 Pulling mxbai-embed-large model...' &
-      /bin/ollama pull mxbai-embed-large &
-      echo '🟢 Done pulling mxbai-embed-large model!' &
-      /bin/ollama list &
-      echo '🔴 Pulling llama3.2:3b model...' &
-      /bin/ollama pull llama3.2:3b &
-      echo '🟢 Done pulling llama3.2:3b model!' &
-      /bin/ollama list &      
-      echo '🔴 Pulling phi3.5:3.8b model...' &
-      /bin/ollama pull phi3.5:3.8b &
-      echo '🟢 Done pulling phi3.5:3.8b model!' &
-      /bin/ollama list &                   
-      echo 'Model preloading complete.' &
-      wait $pid
-      "
-    ports:
-      - "11434:11434"
-    volumes:
-      - host_core_ollama_storage_volume:/root/.ollama
-      - host_core_ollama_storage_volume:/data
     depends_on:
       core_prometheus:
         condition: service_healthy
@@ -872,8 +932,6 @@ trap cleanup EXIT
 
 # Main execution
 log "Starting Docker WebDev Project Setup"
-#check_dependencies
-#install_nvidia_toolkit
 create_project_structure
 generate_secrets
 create_docker_configs
