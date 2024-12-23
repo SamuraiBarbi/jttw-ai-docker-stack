@@ -545,6 +545,9 @@ services:
         sleep 2
       done
       
+      # Give it a moment to finish writing
+      sleep 2
+      
       # Check if json format is in the file
       if ! grep -q "^    - json" "/etc/searxng/settings.yml"; then
         echo "Adding json format to settings.yml..."
@@ -558,12 +561,17 @@ services:
           echo "    - json" >> "/etc/searxng/settings.yml"
         fi
         echo "Successfully added json format"
+        
+        # Restart the service to apply changes
+        echo "Restarting searxng to apply changes..."
+        killall -s SIGTERM uwsgi
+        sleep 2
+        exec /usr/local/searxng/dockerfiles/docker-entrypoint.sh
       else
         echo "json format already exists in settings.yml"
-      fi
-      
-      # Wait for the searxng process
-      wait'
+        # Keep the container running
+        wait
+      fi'
     deploy:
       resources:
         limits:
