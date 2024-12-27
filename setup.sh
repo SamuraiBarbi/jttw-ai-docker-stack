@@ -67,7 +67,6 @@ DEVELOPMENT_NEO4J_DATA_PATH="$DEVELOPMENT_DATA_PATH/neo4j"
 DEVELOPMENT_NEO4J_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.neo4j.env"
 
 
-
 # Logging function
 log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') ${GREEN}[SETUP]${NC} $1"
@@ -165,6 +164,8 @@ generate_secrets() {
   if [ ! -f "$CORE_SECRETS_PATH/.ollama.env" ]; then
     sudo -u $USER touch $CORE_SECRETS_PATH/.ollama.env || error "Failed to create core .ollama.env."
     echo "OLLAMA_FLASH_ATTENTION=1" > $CORE_SECRETS_PATH/.ollama.env || error "Failed to write OLLAMA_FLASH_ATTENTION to core .ollama.env."
+    echo "OLLAMA_API_BASE_URL=http://127.0.0.1:11434" >> $CORE_SECRETS_PATH/.ollama.env || error "Failed to write OLLAMA_BASE_URL to core .ollama.env."
+    echo "OLLAMA_HOST=0.0.0.0" >> $CORE_SECRETS_PATH/.ollama.env || error "Failed to write OLLAMA_HOST to core .ollama.env."
   fi
 
   if [ ! -f "$CORE_SECRETS_PATH/.openwebui.env" ]; then
@@ -183,7 +184,6 @@ generate_secrets() {
     echo "RAG_WEB_SEARCH_RESULT_COUNT=5" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_RESULT_COUNT to core .openwebui.env."
     echo "RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_CONCURRENT_REQUESTS to core .openwebui.env."
   fi
-
 
 
   # Production secrets
@@ -206,6 +206,11 @@ generate_secrets() {
     echo "APACHE2_PASSWORD=$(generate_random_string)" >> $PRODUCTION_SECRETS_PATH/.phpfpm_apache.env || error "Failed to write APACHE2_PASSWORD to production .phpfpm_apache.env." 
     
   fi
+
+
+  # Development secrets
+  if [ ! -f "$DEVELOPMENT_SECRETS_PATH/.mariadb.env" ]; then
+    sudo -u $USER
 
 
 
@@ -249,6 +254,7 @@ create_docker_configs() {
 # cd /mnt/d/backup/local_files/Documents/WSL && sudo -S docker compose up -d
 # docker logs production_mariadb
 # docker exec core_ollama ollama list
+# ollama pull hf.co/unsloth/Qwen2.5-Coder-32B-Instruct-128K-GGUF:Q4_K_M
 volumes:
 # Core volumes
   host_core_storage_volume:
@@ -744,6 +750,18 @@ services:
         echo "Failed to download phi3.5:3.8b"
         download_errors=$((download_errors + 1))
       fi
+
+      echo "Downloading qwen2.5:14b..."
+      if ! /bin/ollama pull qwen2.5:14b; then
+        echo "Failed to download qwen2.5:14b"
+        download_errors=$((download_errors + 1))
+      fi      
+
+      echo "Downloading hhao/qwen2.5-coder-tools:32b..."
+      if ! /bin/ollama pull hhao/qwen2.5-coder-tools:32b; then
+        echo "Failed to download hhao/qwen2.5-coder-tools:32b"
+        download_errors=$((download_errors + 1))
+      fi      
 
       # Report final status
       if [ "$download_errors" = "0" ]; then
