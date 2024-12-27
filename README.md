@@ -82,7 +82,7 @@ This project provides a comprehensive Docker-based development environment setup
 
 2. **Installation**
    ```bash
-   bash docker-setup-script-v1.1.sh
+   bash setup.sh
    ```
 
 3. **Starting Services**
