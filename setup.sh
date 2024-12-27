@@ -207,13 +207,6 @@ generate_secrets() {
     
   fi
 
-
-  # Development secrets
-  if [ ! -f "$DEVELOPMENT_SECRETS_PATH/.mariadb.env" ]; then
-    sudo -u $USER
-
-
-
   # Development secrets
   if [ ! -f "$DEVELOPMENT_SECRETS_PATH/.mariadb.env" ]; then
     sudo -u $USER touch $DEVELOPMENT_SECRETS_PATH/.mariadb.env || error "Failed to create development .mariadb.env."
