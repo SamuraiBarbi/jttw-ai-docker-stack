@@ -452,7 +452,7 @@ services:
       - "portainer.agent.stack=true"
     restart: unless-stopped
     env_file:
-      - /opt/docker/core/secrets/.portainer.env
+      - $CORE_PORTAINER_ENVIRONMENT_FILE
     ports:
       - "9000:9000"
     deploy:
@@ -483,7 +483,7 @@ services:
       - "portainer.agent.stack=true"
     restart: unless-stopped
     env_file:
-      - $CORE_PORTAINER_ENVIRONMENT_FILE
+      - $CORE_PROMPETHEUS_ENVIRONMENT_FILE
     ports:
       - "9090:9090"
     healthcheck:
