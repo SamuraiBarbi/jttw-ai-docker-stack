@@ -1,7 +1,7 @@
 # JTTW-AI Docker Stack
 
 ## Overview
-This project provides a comprehensive Docker-based development environment setup script (`setup.sh`) that configures multiple services for web development, monitoring, and AI capabilities. The script handles directory creation, secret generation, initial LLM downloads llama3.2:3b, phi3.5:3.8b, qwen2.5:14b, and hhao/qwen2.5-coder-tools:32b including embedding model mxbai-embed-large, set up and configuration of OpenWebUI and SearxNG to allow LLM web searches using SearxNG. and Docker configuration.
+Jesus Take the Wheel-AI Docker Stack: This project provides a comprehensive Docker-based development environment setup script (`setup.sh`) that configures multiple services for web development, monitoring, and AI capabilities. The script handles directory creation, secret generation, initial LLM downloads llama3.2:3b, phi3.5:3.8b, qwen2.5:14b, and hhao/qwen2.5-coder-tools:32b including embedding model mxbai-embed-large, set up and configuration of OpenWebUI and SearxNG to allow LLM web searches using SearxNG. and Docker configuration.
 
 ## Services Overview
 
