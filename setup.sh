@@ -12,7 +12,7 @@ WWW_DATA_USER_UID=$(id -u www-data)
 WWW_DATA_USER_GID=$(id -g www-data)
 
 # Define essential path variables
-BASE_PATH="/opt/docker"
+BASE_PATH="$HOME/.docker"
 CORE_PATH="$BASE_PATH/core"
 PRODUCTION_PATH="$BASE_PATH/production"
 DEVELOPMENT_PATH="$BASE_PATH/development"
@@ -1103,7 +1103,7 @@ fix_permissions() {
 
 # Fix permissions for all data directories
 echo "Fixing permissions for data directories..."
-for dir in /opt/docker/*/data/*; do
+for dir in $HOME/.docker/*/data/*; do
   if [ -d "$dir" ]; then
     fix_permissions "$dir"
   fi
