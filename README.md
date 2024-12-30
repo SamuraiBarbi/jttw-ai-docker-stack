@@ -111,7 +111,7 @@ This project provides a comprehensive Docker-based development environment setup
 ## Maintenance
 
 1. **Backups**
-   - Regularly back up `/opt/docker` directory
+   - Regularly back up `$HOME/.docker` directory
    - Use Docker volume backups for databases
 
 2. **Updates**
@@ -139,7 +139,7 @@ This project provides a comprehensive Docker-based development environment setup
 ## Security Considerations
 
 1. **Secrets Management**
-   - Environment files are stored in `/opt/docker/*/secrets`
+   - Environment files are stored in `$HOME/.docker/*/secrets`
    - Ensure proper file permissions
 
 2. **Network Security**
@@ -153,7 +153,7 @@ This project provides a comprehensive Docker-based development environment setup
 ## Customization
 
 1. **Configuration Files**
-   - Modify environment files in `/opt/docker/*/secrets`
+   - Modify environment files in `$HOME/.docker/*/secrets`
    - Adjust Docker Compose settings as needed
 
 2. **Adding Services**
