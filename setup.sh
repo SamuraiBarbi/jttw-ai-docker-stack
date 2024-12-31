@@ -242,9 +242,9 @@ create_docker_configs() {
 # sudo -S docker compose down --remove-orphans
 # sudo -S docker system prune -af
 # sudo -S docker ps -a && echo '=== Images ===' && echo darkness | sudo -S docker images && echo '=== Networks ===' && echo darkness | sudo -S docker network ls
-# sudo rm -rf $BASE_PATH/*
-# cd /mnt/d/backup/local_files/Documents/WSL && bash docker-setup-script-v1.1.sh
-# cd /mnt/d/backup/local_files/Documents/WSL && sudo -S docker compose up -d
+# sudo rm -rf $BASE_PATH/
+# cd $HOME/Documents/projects/jttw-ai-docker-stack && bash setup.sh
+# cd $HOME/Documents/projects/jttw-ai-docker-stack && sudo -S docker compose up -d
 # docker logs production_mariadb
 # docker exec core_ollama ollama list
 # ollama pull hf.co/unsloth/Qwen2.5-Coder-32B-Instruct-128K-GGUF:Q4_K_M
@@ -280,7 +280,6 @@ volumes:
       type: none
       device: $CORE_SEARXNG_DATA_PATH/
       o: bind
-      create: "true"
   host_core_phpmyadmin_storage_volume:
     driver: local
     driver_opts:
@@ -487,7 +486,7 @@ services:
     ports:
       - "9090:9090"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://core_prometheus:9090/-/healthy"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -768,7 +767,7 @@ services:
     depends_on:
       core_prometheus:
         condition: service_healthy
-    runtime: nvidia
+    # runtime: nvidia
     deploy:
       resources:
         reservations:
