@@ -483,7 +483,7 @@ services:
       - "portainer.agent.stack=true"
     restart: unless-stopped
     env_file:
-      - $CORE_PROMPETHEUS_ENVIRONMENT_FILE
+      - $CORE_PROMETHEUS_ENVIRONMENT_FILE
     ports:
       - "9090:9090"
     healthcheck:
