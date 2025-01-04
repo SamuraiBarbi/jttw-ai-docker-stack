@@ -743,6 +743,12 @@ services:
         download_errors=$((download_errors + 1))
       fi
 
+      echo "Downloading qwen2.5:7b..."
+      if ! /bin/ollama pull qwen2.5:7b; then
+        echo "Failed to download qwen2.5:7b"
+        download_errors=$((download_errors + 1))
+      fi   
+      
       echo "Downloading qwen2.5:14b..."
       if ! /bin/ollama pull qwen2.5:14b; then
         echo "Failed to download qwen2.5:14b"
