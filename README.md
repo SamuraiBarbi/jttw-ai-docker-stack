@@ -34,15 +34,20 @@ sudo systemctl restart docker
 
 3. **SearxNG**
    - Privacy-respecting search engine
-   - Access: http://localhost:8083
+   - Access: http://localhost:8084
    - Supports both HTML and JSON search formats
 
-4. **PHPMyAdmin**
+4. **PGAdmin**
    - Database management tool
    - Access: http://localhost:8082
+   - Manages both production and development Postgres instances
+
+5. **PHPMyAdmin**
+   - Database management tool
+   - Access: http://localhost:8083
    - Manages both production and development MariaDB instances
 
-5. **Ollama**
+6. **Ollama**
    - Large Language Model (LLM) server
    - Access: http://localhost:11434
    - Supports multiple AI models including:
@@ -52,7 +57,7 @@ sudo systemctl restart docker
      - qwen2.5:14b
      - hhao/qwen2.5-coder-tools:32b
 
-6. **OpenWebUI**
+7. **OpenWebUI**
    - Web interface for LLMs
    - Access: http://localhost:11435
    - Integrates with Ollama for AI interactions
@@ -63,12 +68,17 @@ sudo systemctl restart docker
    - Access: http://localhost:8080
    - Supports PHP applications
 
-2. **MariaDB**
+2. **Postgres**
+   - Production database
+   - Access: http://localhost:5432
+   - Persistent data storage
+
+3. **MariaDB**
    - Production database
    - Access: http://localhost:3306
    - Persistent data storage
 
-3. **Neo4j**
+4. **Neo4j**
    - Graph database
    - Access: http://localhost:7474
    - Used for knowledge graphs and AI memory augmentation
@@ -79,12 +89,17 @@ sudo systemctl restart docker
    - Access: http://localhost:8081
    - Separate instance for development
 
-2. **MariaDB**
+2. **Postgres**
+   - Development database
+   - Access: http://localhost:5433
+   - Isolated from production data
+
+3. **MariaDB**
    - Development database
    - Access: http://localhost:3307
    - Isolated from production data
 
-3. **Neo4j**
+4. **Neo4j**
    - Development graph database
    - Access: http://localhost:7475
    - Separate instance for development
