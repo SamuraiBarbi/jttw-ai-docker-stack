@@ -37,6 +37,9 @@ CORE_PROMETHEUS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.prometheus.env"
 CORE_SEARXNG_DATA_PATH="$CORE_DATA_PATH/searxng"
 CORE_SEARXNG_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.searxng.env"
 
+CORE_PGADMIN_DATA_PATH="$CORE_DATA_PATH/pgadmin"
+CORE_PGADMIN_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.pgadmin.env"
+
 CORE_PHPMYADMIN_DATA_PATH="$CORE_DATA_PATH/phpmyadmin"
 CORE_PHPMYADMIN_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.phpmyadmin.env"
 
@@ -50,6 +53,9 @@ CORE_OPENWEBUI_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.openwebui.env"
 PRODUCTION_PHPFPM_APACHE_DATA_PATH="$PRODUCTION_DATA_PATH/phpfpm_apache"
 PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.phpfpm_apache.env" 
 
+PRODUCTION_POSTGRES_DATA_PATH="$PRODUCTION_DATA_PATH/postgres"
+PRODUCTION_POSTGRES_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.postgres.env"
+
 PRODUCTION_MARIADB_DATA_PATH="$PRODUCTION_DATA_PATH/mariadb"
 PRODUCTION_MARIADB_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.mariadb.env"
 
@@ -59,6 +65,9 @@ PRODUCTION_NEO4J_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.neo4j.env"
 # Define development service data path and environment file variables
 DEVELOPMENT_PHPFPM_APACHE_DATA_PATH="$DEVELOPMENT_DATA_PATH/phpfpm_apache"
 DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.phpfpm_apache.env"
+
+DEVELOPMENT_POSTGRES_DATA_PATH="$DEVELOPMENT_DATA_PATH/postgres"
+DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.postgres.env"
 
 DEVELOPMENT_MARIADB_DATA_PATH="$DEVELOPMENT_DATA_PATH/mariadb"
 DEVELOPMENT_MARIADB_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.mariadb.env"
@@ -104,16 +113,18 @@ create_project_structure() {
   sudo -u $USER mkdir -p $BASE_PATH/{core,production,development}/{data,secrets} || error "Failed to create base directories."
 
   # Create core service directories
-  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,prometheus,searxng,phpmyadmin,ollama,openwebui} || error "Failed to create core service directories."
+  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,prometheus,searxng,pgadmin,phpmyadmin,ollama,openwebui} || error "Failed to create core service directories."
 
   # Create production service directories
-  sudo -u $USER mkdir -p $PRODUCTION_DATA_PATH/{phpfpm_apache,mariadb,neo4j} || error "Failed to create production service directories."
+  sudo -u $USER mkdir -p $PRODUCTION_DATA_PATH/{phpfpm_apache,postgres,mariadb,neo4j} || error "Failed to create production service directories."
   sudo -u $USER mkdir -p $PRODUCTION_PHPFPM_APACHE_DATA_PATH/{config_php,config_apache,data_apache} || error "Failed to create production PHP-fpm Apache directories."
+  sudo -u $USER mkdir -p $PRODUCTION_POSTGRES_DATA_PATH/data_postgresql || error "Failed to create production Postgres directories."
   sudo -u $USER mkdir -p $PRODUCTION_MARIADB_DATA_PATH/data_mysql || error "Failed to create production MariaDB directories."
   sudo -u $USER mkdir -p $PRODUCTION_NEO4J_DATA_PATH/{data,logs} || error "Failed to create production Neo4j directories."
   # Create development service directories
-  sudo -u $USER mkdir -p $DEVELOPMENT_DATA_PATH/{phpfpm_apache,mariadb,neo4j} || error "Failed to create development service directories."
+  sudo -u $USER mkdir -p $DEVELOPMENT_DATA_PATH/{phpfpm_apache,postgres,mariadb,neo4j} || error "Failed to create development service directories."
   sudo -u $USER mkdir -p $DEVELOPMENT_PHPFPM_APACHE_DATA_PATH/{config_php,config_apache,data_apache} || error "Failed to create development PHP-fpm Apache directories."
+  sudo -u $USER mkdir -p $DEVELOPMENT_POSTGRES_DATA_PATH/data_postgresql || error "Failed to create development Postgres directories."
   sudo -u $USER mkdir -p $DEVELOPMENT_MARIADB_DATA_PATH/data_mysql || error "Failed to create development MariaDB directories."
   sudo -u $USER mkdir -p $DEVELOPMENT_NEO4J_DATA_PATH/{data,logs} || error "Failed to create development Neo4j directories."
   # Set permissions
@@ -144,12 +155,18 @@ generate_secrets() {
 
   if [ ! -f "$CORE_SECRETS_PATH/.searxng.env" ]; then
     sudo -u $USER touch $CORE_SECRETS_PATH/.searxng.env || error "Failed to create core .searxng.env."
-    echo "SEARXNG_BASE_URL=http://localhost:8083" > $CORE_SECRETS_PATH/.searxng.env || error "Failed to write BASE_URL to core .searxng.env."
+    echo "SEARXNG_BASE_URL=http://localhost:8084" > $CORE_SECRETS_PATH/.searxng.env || error "Failed to write BASE_URL to core .searxng.env."
     echo "INSTANCE_NAME=JTTW SearxNG" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write INSTANCE_NAME to core .searxng.env."
     echo "UWSGI_WORKERS=4" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write UWSGI_WORKERS to core .searxng.env."
     echo "UWSGI_THREADS=4" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write UWSGI_THREADS to core .searxng.env."
     echo "SEARXNG_SEARCH_FORMATS=html,json" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write SEARXNG_SETTINGS_SEARCH__FORMATS to core .searxng.env."
     echo "SEARXNG_SEARCH_DEFAULT_FORMAT=html" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write SEARXNG_SETTINGS_SEARCH__DEFAULT_FORMAT to core .searxng.env."
+  fi
+
+  if [ ! -f "$CORE_SECRETS_PATH/.pgadmin.env" ]; then
+    sudo -u $USER touch $CORE_SECRETS_PATH/.pgadmin.env || error "Failed to create core .pgadmin.env."
+    echo "PGADMIN_DEFAULT_EMAIL=pgadmin@jttw-ai-docker-stack.com" > $CORE_SECRETS_PATH/.pgadmin.env || error "Failed to write PGADMIN_DEFAULT_EMAIL to core .pgadmin.env."
+    echo "PGADMIN_DEFAULT_PASSWORD=$(generate_random_string)" >> $CORE_SECRETS_PATH/.pgadmin.env || error "Failed to write PGADMIN_DEFAULT_PASSWORD to core .pgadmin.env."
   fi
 
   if [ ! -f "$CORE_SECRETS_PATH/.phpmyadmin.env" ]; then    
@@ -177,16 +194,20 @@ generate_secrets() {
     echo "RAG_EMBEDDING_MODEL=mxbai-embed-large" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_EMBEDDING_MODEL to core .openwebui.env."
     echo "ENABLE_RAG_WEB_SEARCH=True" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write ENABLE_RAG_WEB_SEARCH to core .openwebui.env."
     echo "ENABLE_SEARCH_QUERY=True" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write ENABLE_SEARCH_QUERY to core .openwebui.env."
-    # echo "RAG_WEB_SEARCH_ENGINE=duckduckgo" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_ENGINE to core .openwebui.env."
-    # To enable searxng searching, we need to uncomments the following lines and edit the searxng $CORE_SEARXNG_DATA_PATH/searxng/settings.yml file to add json to formats:
     echo "RAG_WEB_SEARCH_ENGINE=searxng" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_ENGINE to core .openwebui.env."
     echo "SEARXNG_QUERY_URL=http://core_searxng:8080/search?q=<query>&format=json" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write SEARXNG_QUERY_URL to core .openwebui.env."
     echo "RAG_WEB_SEARCH_RESULT_COUNT=5" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_RESULT_COUNT to core .openwebui.env."
     echo "RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_CONCURRENT_REQUESTS to core .openwebui.env."
   fi
 
-
   # Production secrets
+  if [ ! -f "$PRODUCTION_SECRETS_PATH/.postgres.env" ]; then
+    sudo -u $USER touch $PRODUCTION_SECRETS_PATH/.postgres.env || error "Failed to create production .postgres.env."
+    echo "POSTGRES_USER=production_user" > $PRODUCTION_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_USER to production .postgres.env."
+    echo "POSTGRES_PASSWORD=$(generate_random_string)" >> $PRODUCTION_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_PASSWORD to production .postgres.env."
+    echo "POSTGRES_DB=production" >> $PRODUCTION_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_DB to production .postgres.env."
+  fi
+
   if [ ! -f "$PRODUCTION_SECRETS_PATH/.mariadb.env" ]; then
     sudo -u $USER touch $PRODUCTION_SECRETS_PATH/.mariadb.env || error "Failed to create production .mariadb.env."
     echo "MARIADB_ROOT_PASSWORD=$(generate_random_string)" > $PRODUCTION_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_ROOT_PASSWORD to production .mariadb.env."
@@ -208,6 +229,13 @@ generate_secrets() {
   fi
 
   # Development secrets
+  if [ ! -f "$DEVELOPMENT_SECRETS_PATH/.postgres.env" ]; then
+    sudo -u $USER touch $DEVELOPMENT_SECRETS_PATH/.postgres.env || error "Failed to create development .postgres.env."
+    echo "POSTGRES_USER=development_user" > $DEVELOPMENT_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_USER to development .postgres.env."
+    echo "POSTGRES_PASSWORD=$(generate_random_string)" >> $DEVELOPMENT_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_PASSWORD to development .postgres.env."
+    echo "POSTGRES_DB=development" >> $DEVELOPMENT_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_DB to development .postgres.env."
+  fi
+
   if [ ! -f "$DEVELOPMENT_SECRETS_PATH/.mariadb.env" ]; then
     sudo -u $USER touch $DEVELOPMENT_SECRETS_PATH/.mariadb.env || error "Failed to create development .mariadb.env."
     echo "MARIADB_ROOT_PASSWORD=$(generate_random_string)" > $DEVELOPMENT_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_ROOT_PASSWORD to development .mariadb.env."
@@ -242,7 +270,7 @@ create_docker_configs() {
 # sudo -S docker compose down --remove-orphans
 # sudo -S docker system prune -af
 # sudo -S docker ps -a && echo '=== Images ===' && echo darkness | sudo -S docker images && echo '=== Networks ===' && echo darkness | sudo -S docker network ls
-# sudo rm -rf $BASE_PATH/
+# sudo rm -rf $BASE_PATH
 # cd $HOME/Documents/projects/jttw-ai-docker-stack && bash setup.sh
 # cd $HOME/Documents/projects/jttw-ai-docker-stack && sudo -S docker compose up -d
 # docker logs production_mariadb
@@ -280,6 +308,12 @@ volumes:
       type: none
       device: $CORE_SEARXNG_DATA_PATH/
       o: bind
+  host_core_pgadmin_storage_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: $CORE_PGADMIN_DATA_PATH/
+      o: bind
   host_core_phpmyadmin_storage_volume:
     driver: local
     driver_opts:
@@ -297,8 +331,9 @@ volumes:
     driver_opts:
       type: none
       device: $CORE_OPENWEBUI_DATA_PATH/
-      o: bind          
-      
+      o: bind           
+
+
 # Production volumes
   host_production_secrets_volume:
     driver: local
@@ -323,7 +358,13 @@ volumes:
     driver_opts:
       type: none
       device: $PRODUCTION_PHPFPM_APACHE_DATA_PATH/config_apache/
-      o: bind       
+      o: bind    
+  host_production_postgres_data_postgresql_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PRODUCTION_POSTGRES_DATA_PATH/data_postgresql/
+      o: bind   
   host_production_mariadb_data_mysql_volume:
     driver: local
     driver_opts:
@@ -367,7 +408,13 @@ volumes:
     driver_opts:
       type: none
       device: $DEVELOPMENT_PHPFPM_APACHE_DATA_PATH/config_apache/
-      o: bind    
+      o: bind   
+  host_development_postgres_data_postgresql_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: $DEVELOPMENT_POSTGRES_DATA_PATH/data_postgresql/
+      o: bind 
   host_development_mariadb_data_mysql_volume:
     driver: local
     driver_opts:
@@ -406,6 +453,24 @@ x-common_phpfpm_apache: &common_phpfpm_apache
       limits:
         cpus: '0.50'
         memory: 512M
+
+x-common_postgres: &common_postgres
+  image: postgres:12.22
+  restart: unless-stopped
+  depends_on:
+    core_prometheus:
+      condition: service_healthy
+  deploy:
+    resources:
+      limits:
+        cpus: '1.0'
+        memory: 1G
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 40s    
 
 x-common_mariadb: &common_mariadb        
   image: mariadb:10.6
@@ -470,7 +535,7 @@ services:
       - core_monitoring_network
 
   # Core Prometheus Service
-  # Accessible at: http://localhost:32771
+  # Accessible at: http://localhost:9090
   # Healthcheck status: working
   core_prometheus:
     container_name: core_prometheus
@@ -521,7 +586,7 @@ services:
     env_file:
       - $CORE_SEARXNG_ENVIRONMENT_FILE     
     ports:
-      - "8083:8080" 
+      - "8084:8080" 
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://core_searxng:8080/"]
       interval: 30s
@@ -588,8 +653,89 @@ services:
       - development_db_network  
 
 
-  # Core PhpMyAdmin Service
+  # Core PGAdmin Service
   # Accessible at: http://localhost:8082
+  # Healthcheck status: working
+  core_pgadmin:
+    container_name: core_pgadmin
+    image: dpage/pgadmin4:8.14.0
+    restart: unless-stopped
+    user: "${HOST_USER_UID}:${HOST_USER_GID}"
+    labels:
+      - "local.service.name=CORE - DB Web UI: PGAdmin"
+      - "local.service.description=Core PGAdmin database web ui for Postgres. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.source.url=https://github.com/pgadmin-org/pgadmin4"
+      - "portainer.agent.stack=true"
+    env_file:
+      - $CORE_PGADMIN_ENVIRONMENT_FILE
+    ports:
+      - "8082:80"  
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://core_pgadmin:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      core_prometheus:
+        condition: service_healthy
+      production_mariadb:
+        condition: service_healthy
+      development_mariadb:
+        condition: service_healthy
+      production_postgres:
+        condition: service_healthy
+      development_postgres:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command: >-
+      -c '
+      mkdir -p /pgadmin4
+      cat > /pgadmin4/servers.json <<-EOF
+        {
+          "Servers": {
+            "1": {
+              "Name": "Production PostgreSQL",
+              "Group": "Servers",
+              "Host": "production_postgres",
+              "Port": 5432,
+              "MaintenanceDB": "postgres",
+              "Username": "production_user",
+              "SSLMode": "prefer"
+            },
+            "2": {
+              "Name": "Development PostgreSQL",
+              "Group": "Servers",
+              "Host": "development_postgres",
+              "Port": 5432,
+              "MaintenanceDB": "postgres",
+              "Username": "development_user",
+              "SSLMode": "prefer"
+            }
+          }
+        }
+      EOF
+      /entrypoint.sh
+      '
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    logging:
+      <<: *default-logging
+      options:
+        tag: "core-db-ui-pgadmin/{{.Name}}" 
+    volumes:
+      - host_core_pgadmin_storage_volume:/var/lib/pgadmin:rw       
+    networks:
+      - core_monitoring_network
+      - core_ai_network
+      - production_db_network
+      - development_db_network
+
+  # Core PhpMyAdmin Service
+  # Accessible at: http://localhost:8083
   # Healthcheck status: working
   core_phpmyadmin:
     container_name: core_phpmyadmin
@@ -603,7 +749,7 @@ services:
     env_file:
       - $CORE_PHPMYADMIN_ENVIRONMENT_FILE
     ports:
-      - "8082:80"  
+      - "8083:80"  
     healthcheck:
       test: ["CMD", "curl", "-f", "http://core_phpmyadmin:80/"]
       interval: 30s
@@ -625,7 +771,7 @@ services:
     logging:
       <<: *default-logging
       options:
-        tag: "phpmyadmin/{{.Name}}"    
+        tag: "core-db-ui-phpmyadmin/{{.Name}}"    
     volumes:
       - host_core_phpmyadmin_storage_volume:/etc/apache2/conf-enabled
       - host_core_phpmyadmin_storage_volume:/etc/httpd             
@@ -747,8 +893,8 @@ services:
       if ! /bin/ollama pull qwen2.5:7b; then
         echo "Failed to download qwen2.5:7b"
         download_errors=$((download_errors + 1))
-      fi   
-      
+      fi        
+
       echo "Downloading qwen2.5:14b..."
       if ! /bin/ollama pull qwen2.5:14b; then
         echo "Failed to download qwen2.5:14b"
@@ -836,6 +982,7 @@ services:
       - core_monitoring_network
       - core_ai_network
 
+
 # Production Services
   # Production PHP-fpm Apache2
   # Accessible at: http://localhost:8080
@@ -871,6 +1018,32 @@ services:
     networks:
       - core_monitoring_network
       - production_app_network      
+
+  # Production Postgres
+  # Accessible at: http://localhost:5432
+  # Healthcheck status: working
+  production_postgres:
+    container_name: production_postgres
+    labels:
+      - "local.service.name=Production - DB Server: Postgres"
+      - "local.service.description=Production Postgres database server. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.source.url=https://github.com/postgres/postgres"
+      - "portainer.agent.stack=true"  
+    <<: *common_postgres
+    env_file:
+      - $PRODUCTION_POSTGRES_ENVIRONMENT_FILE
+    ports:
+      - "5432:5432"
+    logging:
+      <<: *default-logging
+      options:
+        tag: "production-database-postgres/{{.Name}}"
+    volumes:
+      - host_production_postgres_data_postgresql_volume:/var/lib/postgresql/data
+    networks:
+      - core_monitoring_network
+      - production_app_network
+      - production_db_network
 
   # Production MariaDB
   # Accessible at: http://localhost:3306
@@ -974,6 +1147,32 @@ services:
     networks:
       - core_monitoring_network
       - development_app_network
+
+  # Development Postgres
+  # Accessible at: http://localhost:5433
+  # Healthcheck status: working
+  development_postgres:
+    container_name: development_postgres
+    labels:
+      - "local.service.name=Development - DB Server: Postgres"
+      - "local.service.description=Development Postgres database server. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.source.url=https://github.com/postgres/postgres"
+      - "portainer.agent.stack=true"  
+    <<: *common_postgres
+    env_file:
+      - $DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE
+    ports:
+      - "5433:5432"
+    logging:
+      <<: *default-logging
+      options:
+        tag: "development-database-postgres/{{.Name}}"
+    volumes:
+      - host_development_postgres_data_postgresql_volume:/var/lib/postgresql/data
+    networks:
+      - core_monitoring_network
+      - development_app_network
+      - development_db_network
 
   # Development MariaDB
   # Accessible at: http://localhost:3307
