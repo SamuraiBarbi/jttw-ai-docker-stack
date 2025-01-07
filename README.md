@@ -349,15 +349,15 @@ sudo systemctl restart docker
    - Create appropriate directories and secrets
 
 ## TODO
-   - Kicking around the notion of adding a pre-configured Zrok docker as a core service for secure zero trust reverse proxy tunneling as a method of making services remotely accessible over the web, we'll see. I may decide to go a different route for this functionality though, not sure yet. Zrok is pretty badass and there's no shortage of other uses it could serve for a stack like this.
+   - Kicking around the notion of adding a pre-configured Zrok docker as a core service for secure zero trust reverse proxy tunneling as a method of making services remotely accessible over the web, we'll see. I may decide to go a different route for this functionality though, not sure yet. Zrok is pretty badass and there's no shortage of other uses it could serve for a stack like this. I'm particularly interested in the notion of a Zrok docker that generates static urls for each service that can be used to access the services over the web, with security features built in.
    - Thinking of adding a Caddy docker for certificate management and cert auto-renewal under core services.
-   - Considering addition of a Traefik docker for routing and load balancing under core services.
+   - Considering addition of a Traefik docker for routing and load balancing under core services. Trying to justify it.
    - May add a Redis docker for caching however it may be in the form of separate production and development Redis docker instances. I'm looking into web interfaces for managing Redis instances soooo if I decide to add Redis as a part of the stack I'll also have to consider the addition of a web interface for it.
    - In addition to these the following are also components I'm weighing making part of this stack.
      - TGI, llama.cpp or koboldcpp in addition to Ollama as part of the stack for when a package or framework is being fucky and not playing nicely with Ollama
-     - litellm
-     - Promptfoo
-     - Guidance
+     - LiteLLM, I've used prior to Ollama becoming plug-n-play with OpenAI compatible applications. want to look into if this project would serve as good fit for this stack if it's no longer needed specifically for providing a layer of OpenAI compatibility for local LLMs.
+     - Promptfoo or an adjacent project
+     - Guidance or an adjacent project
 
 ## Contributing
 
