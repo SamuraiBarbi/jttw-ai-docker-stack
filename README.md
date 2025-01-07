@@ -352,9 +352,9 @@ sudo systemctl restart docker
    - Kicking around the notion of adding a pre-configured Zrok docker as a core service for secure zero trust reverse proxy tunneling as a method of making services remotely accessible over the web, we'll see. I may decide to go a different route for this functionality though, not sure yet. Zrok is pretty badass and there's no shortage of other uses it could serve for a stack like this.
    - Thinking of adding a Caddy docker for certificate management and cert auto-renewal under core services.
    - Considering addition of a Traefik docker for routing and load balancing under core services.
-   - May add a Redis docker for caching however it may be in the form of separate production and development Redis docker instances.
+   - May add a Redis docker for caching however it may be in the form of separate production and development Redis docker instances. I'm looking into web interfaces for managing Redis instances soooo if I decide to add Redis as a part of the stack I'll also have to consider the addition of a web interface for it.
    - In addition to these TGI, llama.cpp as an alternative to Ollama, litellm, Promptfoo, and Guidance are also components I'm weighing making part of this stack.
-   
+
 ## Contributing
 
 1. **Reporting Issues**
