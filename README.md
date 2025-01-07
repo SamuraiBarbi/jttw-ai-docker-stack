@@ -31,17 +31,7 @@ sudo systemctl restart docker
    - Persistent data storage
    - Manages Docker containers and services
 
-2. **Prometheus**
-   - Monitoring server
-   - Access: 
-     - HTTP: http://localhost:9090
-   - Environment Variables: ~/.docker/core/secrets/.prometheus.env
-   - Project Page: https://github.com/prometheus/prometheus
-   - Docker Image: [prom/prometheus:v3.0.1](https://hub.docker.com/layers/prom/prometheus/v3.0.1/images/sha256-c4af82c47edf60ab4da6ce28d9686bc641860b86004fe382ff7ab7d1f1510d47)
-   - Persistent data storage
-   - Collects and stores metrics from all services
-
-3. **SearxNG**
+2. **SearxNG**
    - Privacy-respecting search engine
    - Access: 
      - HTTP: http://localhost:8084
@@ -51,7 +41,7 @@ sudo systemctl restart docker
    - Persistent data storage
    - Installs pre-configured with support for both HTML and JSON search formats
 
-4. **PGAdmin**
+3. **PGAdmin**
    - Web UI for postgres database management
    - Access: 
      - HTTP: http://localhost:8082
@@ -61,7 +51,7 @@ sudo systemctl restart docker
    - Persistent data storage
    - Installs pre-configured with access to both production and development Postgres databases
 
-5. **PHPMyAdmin**
+4. **PHPMyAdmin**
    - Web UI for mariadb database management
    - Access: 
      - HTTP: http://localhost:8083
@@ -72,7 +62,7 @@ sudo systemctl restart docker
    - Manages both production and development MariaDB instances
    - Installs pre-configured with access to production and development MariaDB databases
 
-6. **Ollama**
+5. **Ollama**
    - Large Language Model (LLM) server
    - Access: 
      - HTTP: http://localhost:11434
@@ -88,7 +78,7 @@ sudo systemctl restart docker
      - qwen2.5:14b for chat
      - hhao/qwen2.5-coder-tools:32b for coding
 
-7. **OpenWebUI**
+6. **OpenWebUI**
    - Web interface for LLMs
    - Access: 
      - HTTP: http://localhost:11435
@@ -212,9 +202,8 @@ sudo systemctl restart docker
 
 ## Usage Guidelines
 
-1. **Managing Services**
-   - Use Portainer for container management
-   - Monitor services through Prometheus
+1. **Managing and Monitoring Services**
+   - Use Portainer for container management and monitoring
 
 2. **Database Management**
    - Use PGAdmin for PostgreSQL management
@@ -234,10 +223,6 @@ sudo systemctl restart docker
 2. **Updates**
    - Update Docker images regularly
    - Review and update environment files as needed
-
-3. **Monitoring**
-   - Use Prometheus for system monitoring
-   - Set up alerts for critical services
 
 ## Troubleshooting
 
