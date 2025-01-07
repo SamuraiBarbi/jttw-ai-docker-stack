@@ -8,7 +8,7 @@ The script handles
    - Separate docker services for ai, development, production, and monitoring
    - Secrets generation in the form of docker service specific .env files with appropriate environment variables
    - Automatic strong password generation for all services that use passwords, stored in service specific .env secrets files
-   - Persistent data storage directory creation, and separate data directories configuration for each service
+   - Persistent data storage volume creation, and separate data directories configuration/assignment for each service
      - Base directory: (`~/.docker`)
      - Core directory: (`~/.docker/core`)
      - Core secrets directory: (`~/.docker/core/secrets`)
