@@ -5,7 +5,7 @@ Jesus Take the Wheel-AI Docker Stack: This project provides a comprehensive Dock
 
 The script handles 
    - Version tagged docker images for each service
-   - Separate docker services for ai,development, production, and monitoring
+   - Separate docker services for ai, development, production, and monitoring
    - Secret generation in the form of docker service specific .env files with appropriate environment variables   
    - Persitent data storage directory creation, and separate data directories for each service
      - Base directory: (`~/.docker`)
