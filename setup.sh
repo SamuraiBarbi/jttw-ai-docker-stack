@@ -31,9 +31,6 @@ DEVELOPMENT_DATA_PATH="$DEVELOPMENT_PATH/data"
 CORE_PORTAINER_DATA_PATH="$CORE_DATA_PATH/portainer"
 CORE_PORTAINER_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.portainer.env"
 
-CORE_PROMETHEUS_DATA_PATH="$CORE_DATA_PATH/prometheus"
-CORE_PROMETHEUS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.prometheus.env"
-
 CORE_SEARXNG_DATA_PATH="$CORE_DATA_PATH/searxng"
 CORE_SEARXNG_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.searxng.env"
 
@@ -113,7 +110,7 @@ create_project_structure() {
   sudo -u $USER mkdir -p $BASE_PATH/{core,production,development}/{data,secrets} || error "Failed to create base directories."
 
   # Create core service directories
-  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,prometheus,searxng,pgadmin,phpmyadmin,ollama,openwebui} || error "Failed to create core service directories."
+  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,searxng,pgadmin,phpmyadmin,ollama,openwebui} || error "Failed to create core service directories."
   sudo -u $USER mkdir -p $CORE_PGADMIN_DATA_PATH/storage_pgadmin || error "Failed to create core PGAdmin directories."
 
   # Create production service directories
@@ -147,11 +144,6 @@ generate_secrets() {
   if [ ! -f "$CORE_PORTAINER_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $CORE_PORTAINER_ENVIRONMENT_FILE || error "Failed to create core .portainer.env."
     echo "PORTAINER_ADMIN_PASSWORD=$(generate_random_string)" > $CORE_PORTAINER_ENVIRONMENT_FILE || error "Failed to write PORTAINER_ADMIN_PASSWORD to core .portainer.env."
-  fi
-
-  if [ ! -f "$CORE_PROMETHEUS_ENVIRONMENT_FILE" ]; then
-    sudo -u $USER touch $CORE_PROMETHEUS_ENVIRONMENT_FILE || error "Failed to create core .prometheus.env."
-    echo "PROMETHEUS_PASSWORD=$(generate_random_string)" > $CORE_PROMETHEUS_ENVIRONMENT_FILE || error "Failed to write PROMETHEUS_PASSWORD to core .prometheus.env."
   fi
 
   if [ ! -f "$CORE_SEARXNG_ENVIRONMENT_FILE" ]; then
@@ -298,12 +290,6 @@ volumes:
       type: none
       device: $CORE_PORTAINER_DATA_PATH/
       o: bind
-  host_core_prometheus_storage_volume:
-    driver: local
-    driver_opts:
-      type: none
-      device: $CORE_PROMETHEUS_DATA_PATH/
-      o: bind      
   host_core_searxng_storage_volume:
     driver: local
     driver_opts:
@@ -447,10 +433,7 @@ x-logging: &default-logging
 
 x-common_phpfpm_apache: &common_phpfpm_apache
   image: shinsenter/phpfpm-apache:php8
-  restart: unless-stopped
-  depends_on:
-    core_prometheus:
-      condition: service_healthy  
+  restart: unless-stopped 
   deploy:
     resources:
       limits:
@@ -460,9 +443,6 @@ x-common_phpfpm_apache: &common_phpfpm_apache
 x-common_postgres: &common_postgres
   image: postgres:12.22
   restart: unless-stopped
-  depends_on:
-    core_prometheus:
-      condition: service_healthy
   deploy:
     resources:
       limits:
@@ -478,9 +458,6 @@ x-common_postgres: &common_postgres
 x-common_mariadb: &common_mariadb        
   image: mariadb:10.6
   restart: unless-stopped
-  depends_on:
-    core_prometheus:
-      condition: service_healthy  
   deploy:
     resources:
       limits:
@@ -492,8 +469,6 @@ x-common_neo4j: &common_neo4j
   image: neo4j:5.26.0-community
   restart: unless-stopped
   depends_on:
-    core_prometheus:
-      condition: service_healthy
     core_ollama:
       condition: service_healthy    
   deploy:
@@ -503,7 +478,7 @@ x-common_neo4j: &common_neo4j
         memory: 2G
 
 
-configs:
+configs:               
   preferences.json:
     content: |
       {
@@ -573,41 +548,6 @@ services:
     networks:
       - core_monitoring_network
 
-  # Core Prometheus Service
-  # Accessible at: http://localhost:9090
-  # Healthcheck status: working
-  core_prometheus:
-    container_name: core_prometheus
-    image: prom/prometheus:v3.0.1
-    labels:
-      - "local.service.name=Core - Monitoring Server: Prometheus"
-      - "local.service.description=Core Prometheus monitoring server for monitoring and alerting about container services. Certain directories for this service are made available to the host machine for the purposes of data persistence."
-      - "local.service.source.url=https://github.com/prometheus/prometheus"
-      - "portainer.agent.stack=true"
-    restart: unless-stopped
-    env_file:
-      - $CORE_PROMETHEUS_ENVIRONMENT_FILE
-    ports:
-      - "9090:9090"
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 2G
-    logging:
-      <<: *default-logging
-      options:
-        tag: "core-monitoring/{{.Name}}"  
-    volumes:
-      - host_core_prometheus_storage_volume:/prometheus
-    networks:
-      - core_monitoring_network
 
   # Core SearxNG Service
   # Accessible at: http://localhost:8080
@@ -632,9 +572,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
-    depends_on:
-      core_prometheus:
-        condition: service_healthy
     entrypoint: /bin/sh
     command: |
       -c '
@@ -715,8 +652,6 @@ services:
       retries: 3
       start_period: 40s
     depends_on:
-      core_prometheus:
-        condition: service_healthy
       production_mariadb:
         condition: service_healthy
       development_mariadb:
@@ -770,8 +705,6 @@ services:
       retries: 3
       start_period: 40s
     depends_on:
-      core_prometheus:
-        condition: service_healthy
       production_mariadb:
         condition: service_healthy
       development_mariadb:
@@ -929,9 +862,6 @@ services:
       
       # Keep container running
       wait $server_pid'
-    depends_on:
-      core_prometheus:
-        condition: service_healthy
     # runtime: nvidia
     deploy:
       resources:
@@ -978,8 +908,6 @@ services:
       retries: 3
       start_period: 40s
     depends_on:
-      core_prometheus:
-        condition: service_healthy
       core_ollama:
         condition: service_healthy      
     deploy:
@@ -1256,7 +1184,7 @@ services:
 
 networks:
 # Core Networks
-  # Core Monitoring Network is used to monitor all of our services/docker containers ( Prometheus and Portainer )
+  # Core Monitoring Network is used to monitor all of our services/docker containers ( Portainer )
   core_monitoring_network:
     driver: bridge
   # Core Remote Access Network is used for our remote access related services/docker containers ( Zrok )
