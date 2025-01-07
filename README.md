@@ -355,7 +355,7 @@ sudo systemctl restart docker
    - May add a Redis docker for caching however it may be in the form of separate production and development Redis docker instances. I'm looking into web interfaces for managing Redis instances soooo if I decide to add Redis as a part of the stack I'll also have to consider the addition of a web interface for it.
    - In addition to these the following are also components I'm weighing making part of this stack.
      - TGI, llama.cpp or koboldcpp in addition to Ollama as part of the stack for when a package or framework is being fucky and not playing nicely with Ollama
-     - LiteLLM, I've used prior to Ollama becoming plug-n-play with OpenAI compatible applications. want to look into if this project would serve as good fit for this stack if it's no longer needed specifically for providing a layer of OpenAI compatibility for local LLMs.
+     - LiteLLM, I've used prior to Ollama becoming plug-n-play with OpenAI compatible applications. I want to look into if this project would serve as good fit for this stack if it's no longer needed specifically for providing a layer of OpenAI compatibility for local LLMs.
      - Promptfoo or an adjacent project
      - Guidance or an adjacent project
 
