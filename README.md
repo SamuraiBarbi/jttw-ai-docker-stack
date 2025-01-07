@@ -217,6 +217,7 @@ sudo systemctl restart docker
    - Monitor services through Prometheus
 
 2. **Database Management**
+   - Use PGAdmin for PostgreSQL management
    - Use PHPMyAdmin for MariaDB management
    - Access Neo4j through its web interface
 
