@@ -358,6 +358,8 @@ sudo systemctl restart docker
      - LiteLLM, I've used prior to Ollama becoming plug-n-play with OpenAI compatible applications. I want to look into if this project would serve as good fit for this stack if it's no longer needed specifically for providing a layer of OpenAI compatibility for local LLMs.
      - Promptfoo or an adjacent project
      - Guidance or an adjacent project
+     - Text-to-speech and/or Speech-to-text dockers
+     - An image generation dockers using SD Forge, SwarmUI, or something similar which can be access via a web interface and has api that can be utilized to generate images
 
 ## Contributing
 
