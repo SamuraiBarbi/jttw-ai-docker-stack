@@ -113,7 +113,7 @@ sudo systemctl restart docker
    - Installs pre-configured with support for both HTML and JSON search formats
 
 3. **PGAdmin**
-   - Web UI for postgres database management
+   - Web UI for Postgres database management
    - Access: 
      - HTTP: http://localhost:8082
    - Environment Variables: ~/.docker/core/secrets/.pgadmin.env
@@ -123,7 +123,7 @@ sudo systemctl restart docker
    - Installs pre-configured with access to both production and development Postgres databases
 
 4. **PHPMyAdmin**
-   - Web UI for mariadb database management
+   - Web UI for MariaDB database management
    - Access: 
      - HTTP: http://localhost:8083
    - Environment Variables: ~/.docker/core/secrets/.phpmyadmin.env
@@ -150,7 +150,7 @@ sudo systemctl restart docker
      - [hhao/qwen2.5-coder-tools:32b](https://ollama.com/library/hhao/qwen2.5-coder-tools:32b) for coding
 
 6. **OpenWebUI**
-   - Web interface for LLMs
+   - Web interface for LLMs 
    - Access: 
      - HTTP: http://localhost:11435
    - Environment Variables: ~/.docker/core/secrets/.openwebui.env
