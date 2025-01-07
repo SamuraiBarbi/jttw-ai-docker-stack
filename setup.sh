@@ -114,6 +114,7 @@ create_project_structure() {
 
   # Create core service directories
   sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,prometheus,searxng,pgadmin,phpmyadmin,ollama,openwebui} || error "Failed to create core service directories."
+  sudo -u $USER mkdir -p $CORE_PGADMIN_DATA_PATH/storage_pgadmin || error "Failed to create core PGAdmin directories."
 
   # Create production service directories
   sudo -u $USER mkdir -p $PRODUCTION_DATA_PATH/{phpfpm_apache,postgres,mariadb,neo4j} || error "Failed to create production service directories."
@@ -143,116 +144,117 @@ generate_secrets() {
   log "Generating secure secrets..."
   
   # Core secrets
-  if [ ! -f "$CORE_SECRETS_PATH/.portainer.env" ]; then
-    sudo -u $USER touch $CORE_SECRETS_PATH/.portainer.env || error "Failed to create core .portainer.env."
-    echo "PORTAINER_ADMIN_PASSWORD=$(generate_random_string)" > $CORE_SECRETS_PATH/.portainer.env || error "Failed to write PORTAINER_ADMIN_PASSWORD to core .portainer.env."
+  if [ ! -f "$CORE_PORTAINER_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_PORTAINER_ENVIRONMENT_FILE || error "Failed to create core .portainer.env."
+    echo "PORTAINER_ADMIN_PASSWORD=$(generate_random_string)" > $CORE_PORTAINER_ENVIRONMENT_FILE || error "Failed to write PORTAINER_ADMIN_PASSWORD to core .portainer.env."
   fi
 
-  if [ ! -f "$CORE_SECRETS_PATH/.prometheus.env" ]; then
-    sudo -u $USER touch $CORE_SECRETS_PATH/.prometheus.env || error "Failed to create core .prometheus.env."
-    echo "PROMETHEUS_PASSWORD=$(generate_random_string)" > $CORE_SECRETS_PATH/.prometheus.env || error "Failed to write PROMETHEUS_PASSWORD to core .prometheus.env."
+  if [ ! -f "$CORE_PROMETHEUS_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_PROMETHEUS_ENVIRONMENT_FILE || error "Failed to create core .prometheus.env."
+    echo "PROMETHEUS_PASSWORD=$(generate_random_string)" > $CORE_PROMETHEUS_ENVIRONMENT_FILE || error "Failed to write PROMETHEUS_PASSWORD to core .prometheus.env."
   fi
 
-  if [ ! -f "$CORE_SECRETS_PATH/.searxng.env" ]; then
-    sudo -u $USER touch $CORE_SECRETS_PATH/.searxng.env || error "Failed to create core .searxng.env."
-    echo "SEARXNG_BASE_URL=http://localhost:8084" > $CORE_SECRETS_PATH/.searxng.env || error "Failed to write BASE_URL to core .searxng.env."
-    echo "INSTANCE_NAME=JTTW SearxNG" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write INSTANCE_NAME to core .searxng.env."
-    echo "UWSGI_WORKERS=4" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write UWSGI_WORKERS to core .searxng.env."
-    echo "UWSGI_THREADS=4" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write UWSGI_THREADS to core .searxng.env."
-    echo "SEARXNG_SEARCH_FORMATS=html,json" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write SEARXNG_SETTINGS_SEARCH__FORMATS to core .searxng.env."
-    echo "SEARXNG_SEARCH_DEFAULT_FORMAT=html" >> $CORE_SECRETS_PATH/.searxng.env || error "Failed to write SEARXNG_SETTINGS_SEARCH__DEFAULT_FORMAT to core .searxng.env."
+  if [ ! -f "$CORE_SEARXNG_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to create core .searxng.env."
+    echo "SEARXNG_BASE_URL=http://localhost:8084" > $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write BASE_URL to core .searxng.env."
+    echo "INSTANCE_NAME=JTTW SearxNG" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write INSTANCE_NAME to core .searxng.env."
+    echo "UWSGI_WORKERS=4" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write UWSGI_WORKERS to core .searxng.env."
+    echo "UWSGI_THREADS=4" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write UWSGI_THREADS to core .searxng.env."
+    echo "SEARXNG_SEARCH_FORMATS=html,json" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write SEARXNG_SETTINGS_SEARCH__FORMATS to core .searxng.env."
+    echo "SEARXNG_SEARCH_DEFAULT_FORMAT=html" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write SEARXNG_SETTINGS_SEARCH__DEFAULT_FORMAT to core .searxng.env."
   fi
 
-  if [ ! -f "$CORE_SECRETS_PATH/.pgadmin.env" ]; then
-    sudo -u $USER touch $CORE_SECRETS_PATH/.pgadmin.env || error "Failed to create core .pgadmin.env."
-    echo "PGADMIN_DEFAULT_EMAIL=pgadmin@jttw-ai-docker-stack.com" > $CORE_SECRETS_PATH/.pgadmin.env || error "Failed to write PGADMIN_DEFAULT_EMAIL to core .pgadmin.env."
-    echo "PGADMIN_DEFAULT_PASSWORD=$(generate_random_string)" >> $CORE_SECRETS_PATH/.pgadmin.env || error "Failed to write PGADMIN_DEFAULT_PASSWORD to core .pgadmin.env."
+  if [ ! -f "$CORE_PGADMIN_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_PGADMIN_ENVIRONMENT_FILE || error "Failed to create core .pgadmin.env."
+    echo "PGADMIN_DEFAULT_EMAIL=pgadmin@jttw-ai-docker-stack.com" > $CORE_PGADMIN_ENVIRONMENT_FILE || error "Failed to write PGADMIN_DEFAULT_EMAIL to core .pgadmin.env."
+    echo "PGADMIN_DEFAULT_PASSWORD=$(generate_random_string)" >> $CORE_PGADMIN_ENVIRONMENT_FILE || error "Failed to write PGADMIN_DEFAULT_PASSWORD to core .pgadmin.env."
+    echo "MASTER_PASSWORD_REQUIRED=False" >> $CORE_PGADMIN_ENVIRONMENT_FILE || error "Failed to write MASTER_PASSWORD_REQUIRED to core .pgadmin.env."
   fi
 
-  if [ ! -f "$CORE_SECRETS_PATH/.phpmyadmin.env" ]; then    
-    sudo -u $USER touch $CORE_SECRETS_PATH/.phpmyadmin.env || error "Failed to create core .phpmyadmin.env."
-    echo "PMA_HOSTS=production_mariadb,development_mariadb" > $CORE_SECRETS_PATH/.phpmyadmin.env || error "Failed to write PMA_HOSTS to core .phpmyadmin.env."
-    echo "PMA_PORTS=3306,3306" >> $CORE_SECRETS_PATH/.phpmyadmin.env || error "Failed to write PMA_PORTS to core .phpmyadmin.env."    
-    # echo "PMA_PMADB=development_mariadb" >> $CORE_SECRETS_PATH/.phpmyadmin.env || error "Failed to write PMA_PMADB to core .phpmyadmin.env."
-    # echo "PMA_CONTROLUSER=pma" >> $CORE_SECRETS_PATH/.phpmyadmin.env || error "Failed to write PMA_CONTROLUSER to core .phpmyadmin.env."
-    # echo "PMA_CONTROLPASS=$(generate_random_string)" >> $CORE_SECRETS_PATH/.phpmyadmin.env || error "Failed to write PMA_CONTROLPASS to core .phpmyadmin.env."
+  if [ ! -f "$CORE_PHPMYADMIN_ENVIRONMENT_FILE" ]; then    
+    sudo -u $USER touch $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to create core .phpmyadmin.env."
+    echo "PMA_HOSTS=production_mariadb,development_mariadb" > $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_HOSTS to core .phpmyadmin.env."
+    echo "PMA_PORTS=3306,3306" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_PORTS to core .phpmyadmin.env."    
+    # echo "PMA_PMADB=development_mariadb" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_PMADB to core .phpmyadmin.env."
+    # echo "PMA_CONTROLUSER=pma" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_CONTROLUSER to core .phpmyadmin.env."
+    # echo "PMA_CONTROLPASS=$(generate_random_string)" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_CONTROLPASS to core .phpmyadmin.env."
   fi
 
-  if [ ! -f "$CORE_SECRETS_PATH/.ollama.env" ]; then
-    sudo -u $USER touch $CORE_SECRETS_PATH/.ollama.env || error "Failed to create core .ollama.env."
-    echo "OLLAMA_FLASH_ATTENTION=1" > $CORE_SECRETS_PATH/.ollama.env || error "Failed to write OLLAMA_FLASH_ATTENTION to core .ollama.env."
-    echo "OLLAMA_API_BASE_URL=http://127.0.0.1:11434" >> $CORE_SECRETS_PATH/.ollama.env || error "Failed to write OLLAMA_BASE_URL to core .ollama.env."
-    echo "OLLAMA_HOST=0.0.0.0" >> $CORE_SECRETS_PATH/.ollama.env || error "Failed to write OLLAMA_HOST to core .ollama.env."
+  if [ ! -f "$CORE_OLLAMA_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to create core .ollama.env."
+    echo "OLLAMA_FLASH_ATTENTION=1" > $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to write OLLAMA_FLASH_ATTENTION to core .ollama.env."
+    echo "OLLAMA_API_BASE_URL=http://127.0.0.1:11434" >> $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to write OLLAMA_BASE_URL to core .ollama.env."
+    echo "OLLAMA_HOST=0.0.0.0" >> $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to write OLLAMA_HOST to core .ollama.env."
   fi
 
-  if [ ! -f "$CORE_SECRETS_PATH/.openwebui.env" ]; then
-    sudo -u $USER touch $CORE_SECRETS_PATH/.openwebui.env || error "Failed to create core .openwebui.env."
-    echo "WEBUI_SECRET_KEY=$(generate_random_string)" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write WEBUI_SECRET_KEY to core .openwebui.env."    
-    echo "OLLAMA_BASE_URLS=http://core_ollama:11434" > $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write OLLAMA_BASE_URLS to core .openwebui.env."
-    echo "RAG_EMBEDDING_ENGINE=ollama" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_EMBEDDING_ENGINE to core .openwebui.env."
-    echo "RAG_OLLAMA_BASE_URL=http://core_ollama:11434" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_OPENAI_API_BASE_URL to core .openwebui.env."
-    echo "RAG_EMBEDDING_MODEL=mxbai-embed-large" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_EMBEDDING_MODEL to core .openwebui.env."
-    echo "ENABLE_RAG_WEB_SEARCH=True" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write ENABLE_RAG_WEB_SEARCH to core .openwebui.env."
-    echo "ENABLE_SEARCH_QUERY=True" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write ENABLE_SEARCH_QUERY to core .openwebui.env."
-    echo "RAG_WEB_SEARCH_ENGINE=searxng" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_ENGINE to core .openwebui.env."
-    echo "SEARXNG_QUERY_URL=http://core_searxng:8080/search?q=<query>&format=json" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write SEARXNG_QUERY_URL to core .openwebui.env."
-    echo "RAG_WEB_SEARCH_RESULT_COUNT=5" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_RESULT_COUNT to core .openwebui.env."
-    echo "RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10" >> $CORE_SECRETS_PATH/.openwebui.env || error "Failed to write RAG_WEB_SEARCH_CONCURRENT_REQUESTS to core .openwebui.env."
+  if [ ! -f "$CORE_OPENWEBUI_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to create core .openwebui.env."
+    echo "WEBUI_SECRET_KEY=$(generate_random_string)" > $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write WEBUI_SECRET_KEY to core .openwebui.env."    
+    echo "OLLAMA_BASE_URLS=http://core_ollama:11434" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write OLLAMA_BASE_URLS to core .openwebui.env."
+    echo "RAG_EMBEDDING_ENGINE=ollama" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_EMBEDDING_ENGINE to core .openwebui.env."
+    echo "RAG_OLLAMA_BASE_URL=http://core_ollama:11434" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_OPENAI_API_BASE_URL to core .openwebui.env."
+    echo "RAG_EMBEDDING_MODEL=mxbai-embed-large" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_EMBEDDING_MODEL to core .openwebui.env."
+    echo "ENABLE_RAG_WEB_SEARCH=True" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write ENABLE_RAG_WEB_SEARCH to core .openwebui.env."
+    echo "ENABLE_SEARCH_QUERY=True" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write ENABLE_SEARCH_QUERY to core .openwebui.env."
+    echo "RAG_WEB_SEARCH_ENGINE=searxng" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_ENGINE to core .openwebui.env."
+    echo "SEARXNG_QUERY_URL=http://core_searxng:8080/search?q=<query>&format=json" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write SEARXNG_QUERY_URL to core .openwebui.env."
+    echo "RAG_WEB_SEARCH_RESULT_COUNT=5" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_RESULT_COUNT to core .openwebui.env."
+    echo "RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_CONCURRENT_REQUESTS to core .openwebui.env."
   fi
 
   # Production secrets
-  if [ ! -f "$PRODUCTION_SECRETS_PATH/.postgres.env" ]; then
-    sudo -u $USER touch $PRODUCTION_SECRETS_PATH/.postgres.env || error "Failed to create production .postgres.env."
-    echo "POSTGRES_USER=production_user" > $PRODUCTION_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_USER to production .postgres.env."
-    echo "POSTGRES_PASSWORD=$(generate_random_string)" >> $PRODUCTION_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_PASSWORD to production .postgres.env."
-    echo "POSTGRES_DB=production" >> $PRODUCTION_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_DB to production .postgres.env."
+  if [ ! -f "$PRODUCTION_POSTGRES_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $PRODUCTION_POSTGRES_ENVIRONMENT_FILE || error "Failed to create production .postgres.env."
+    echo "POSTGRES_USER=production_user" > $PRODUCTION_POSTGRES_ENVIRONMENT_FILE || error "Failed to write POSTGRES_USER to production .postgres.env."
+    echo "POSTGRES_PASSWORD=$(generate_random_string)" >> $PRODUCTION_POSTGRES_ENVIRONMENT_FILE || error "Failed to write POSTGRES_PASSWORD to production .postgres.env."
+    echo "POSTGRES_DB=production" >> $PRODUCTION_POSTGRES_ENVIRONMENT_FILE || error "Failed to write POSTGRES_DB to production .postgres.env."
   fi
 
-  if [ ! -f "$PRODUCTION_SECRETS_PATH/.mariadb.env" ]; then
-    sudo -u $USER touch $PRODUCTION_SECRETS_PATH/.mariadb.env || error "Failed to create production .mariadb.env."
-    echo "MARIADB_ROOT_PASSWORD=$(generate_random_string)" > $PRODUCTION_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_ROOT_PASSWORD to production .mariadb.env."
-    echo "MARIADB_DATABASE=production" >> $PRODUCTION_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_DATABASE to production .mariadb.env."
-    echo "MARIADB_USER=production_user" >> $PRODUCTION_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_USER to production .mariadb.env."
-    echo "MARIADB_PASSWORD=$(generate_random_string)" >> $PRODUCTION_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_PASSWORD to production .mariadb.env."
+  if [ ! -f "$PRODUCTION_MARIADB_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $PRODUCTION_MARIADB_ENVIRONMENT_FILE || error "Failed to create production .mariadb.env."
+    echo "MARIADB_ROOT_PASSWORD=$(generate_random_string)" > $PRODUCTION_MARIADB_ENVIRONMENT_FILE || error "Failed to write MARIADB_ROOT_PASSWORD to production .mariadb.env."
+    echo "MARIADB_DATABASE=production" >> $PRODUCTION_MARIADB_ENVIRONMENT_FILE || error "Failed to write MARIADB_DATABASE to production .mariadb.env."
+    echo "MARIADB_USER=production_user" >> $PRODUCTION_MARIADB_ENVIRONMENT_FILE || error "Failed to write MARIADB_USER to production .mariadb.env."
+    echo "MARIADB_PASSWORD=$(generate_random_string)" >> $PRODUCTION_MARIADB_ENVIRONMENT_FILE || error "Failed to write MARIADB_PASSWORD to production .mariadb.env."
   fi
 
-  if [ ! -f "$PRODUCTION_SECRETS_PATH/.neo4j.env" ]; then
-    sudo -u $USER touch $PRODUCTION_SECRETS_PATH/.neo4j.env || error "Failed to create production .neo4j.env."
-    echo "NEO4J_AUTH=neo4j/$(generate_random_string)" > $PRODUCTION_SECRETS_PATH/.neo4j.env || error "Failed to write NEO4J_AUTH to production .neo4j.env."    
+  if [ ! -f "$PRODUCTION_NEO4J_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $PRODUCTION_NEO4J_ENVIRONMENT_FILE || error "Failed to create production .neo4j.env."
+    echo "NEO4J_AUTH=neo4j/$(generate_random_string)" > $PRODUCTION_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_AUTH to production .neo4j.env."    
   fi
 
-  if [ ! -f "$PRODUCTION_SECRETS_PATH/.phpfpm_apache.env" ]; then
-    sudo -u $USER touch $PRODUCTION_SECRETS_PATH/.phpfpm_apache.env || error "Failed to create production .phpfpm_apache.env."
-    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > $PRODUCTION_SECRETS_PATH/.phpfpm_apache.env || error "Failed to write PHP_FPM_PASSWORD to production .phpfpm_apache.env."
-    echo "APACHE2_PASSWORD=$(generate_random_string)" >> $PRODUCTION_SECRETS_PATH/.phpfpm_apache.env || error "Failed to write APACHE2_PASSWORD to production .phpfpm_apache.env." 
+  if [ ! -f "$PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to create production .phpfpm_apache.env."
+    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write PHP_FPM_PASSWORD to production .phpfpm_apache.env."
+    echo "APACHE2_PASSWORD=$(generate_random_string)" >> $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write APACHE2_PASSWORD to production .phpfpm_apache.env." 
     
   fi
 
   # Development secrets
-  if [ ! -f "$DEVELOPMENT_SECRETS_PATH/.postgres.env" ]; then
-    sudo -u $USER touch $DEVELOPMENT_SECRETS_PATH/.postgres.env || error "Failed to create development .postgres.env."
-    echo "POSTGRES_USER=development_user" > $DEVELOPMENT_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_USER to development .postgres.env."
-    echo "POSTGRES_PASSWORD=$(generate_random_string)" >> $DEVELOPMENT_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_PASSWORD to development .postgres.env."
-    echo "POSTGRES_DB=development" >> $DEVELOPMENT_SECRETS_PATH/.postgres.env || error "Failed to write POSTGRES_DB to development .postgres.env."
+  if [ ! -f "$DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE || error "Failed to create development .postgres.env."
+    echo "POSTGRES_USER=development_user" > $DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE || error "Failed to write POSTGRES_USER to development .postgres.env."
+    echo "POSTGRES_PASSWORD=$(generate_random_string)" >> $DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE || error "Failed to write POSTGRES_PASSWORD to development .postgres.env."
+    echo "POSTGRES_DB=development" >> $DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE || error "Failed to write POSTGRES_DB to development .postgres.env."
   fi
 
-  if [ ! -f "$DEVELOPMENT_SECRETS_PATH/.mariadb.env" ]; then
-    sudo -u $USER touch $DEVELOPMENT_SECRETS_PATH/.mariadb.env || error "Failed to create development .mariadb.env."
-    echo "MARIADB_ROOT_PASSWORD=$(generate_random_string)" > $DEVELOPMENT_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_ROOT_PASSWORD to development .mariadb.env."
-    echo "MARIADB_DATABASE=development" >> $DEVELOPMENT_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_DATABASE to development .mariadb.env."
-    echo "MARIADB_USER=development_user" >> $DEVELOPMENT_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_USER to development .mariadb.env."
-    echo "MARIADB_PASSWORD=$(generate_random_string)" >> $DEVELOPMENT_SECRETS_PATH/.mariadb.env || error "Failed to write MARIADB_PASSWORD to development .mariadb.env."
+  if [ ! -f "$DEVELOPMENT_MARIADB_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $DEVELOPMENT_MARIADB_ENVIRONMENT_FILE || error "Failed to create development .mariadb.env."
+    echo "MARIADB_ROOT_PASSWORD=$(generate_random_string)" > $DEVELOPMENT_MARIADB_ENVIRONMENT_FILE || error "Failed to write MARIADB_ROOT_PASSWORD to development .mariadb.env."
+    echo "MARIADB_DATABASE=development" >> $DEVELOPMENT_MARIADB_ENVIRONMENT_FILE || error "Failed to write MARIADB_DATABASE to development .mariadb.env."
+    echo "MARIADB_USER=development_user" >> $DEVELOPMENT_MARIADB_ENVIRONMENT_FILE || error "Failed to write MARIADB_USER to development .mariadb.env."
+    echo "MARIADB_PASSWORD=$(generate_random_string)" >> $DEVELOPMENT_MARIADB_ENVIRONMENT_FILE || error "Failed to write MARIADB_PASSWORD to development .mariadb.env."
   fi
 
-  if [ ! -f "$DEVELOPMENT_SECRETS_PATH/.neo4j.env" ]; then
-    sudo -u $USER touch $DEVELOPMENT_SECRETS_PATH/.neo4j.env || error "Failed to create development.neo4j.env."
-    echo "NEO4J_AUTH=neo4j/$(generate_random_string)" > $DEVELOPMENT_SECRETS_PATH/.neo4j.env || error "Failed to write NEO4J_AUTH to development .neo4j.env."
+  if [ ! -f "$DEVELOPMENT_NEO4J_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE || error "Failed to create development.neo4j.env."
+    echo "NEO4J_AUTH=neo4j/$(generate_random_string)" > $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_AUTH to development .neo4j.env."
   fi
 
-  if [ ! -f "$DEVELOPMENT_SECRETS_PATH/.phpfpm_apache.env" ]; then
-    sudo -u $USER touch $DEVELOPMENT_SECRETS_PATH/.phpfpm_apache.env || error "Failed to create development .phpfpm_apache.env."
-    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > $DEVELOPMENT_SECRETS_PATH/.phpfpm_apache.env || error "Failed to write PHP_FPM_PASSWORD to development .phpfpm_apache.env."
-    echo "APACHE2_PASSWORD=$(generate_random_string)" >> $DEVELOPMENT_SECRETS_PATH/.phpfpm_apache.env || error "Failed to write APACHE2_PASSWORD to development .phpfpm_apache.env."
+  if [ ! -f "$DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to create development .phpfpm_apache.env."
+    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write PHP_FPM_PASSWORD to development .phpfpm_apache.env."
+    echo "APACHE2_PASSWORD=$(generate_random_string)" >> $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write APACHE2_PASSWORD to development .phpfpm_apache.env."
       
   fi
 
@@ -312,8 +314,9 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_PGADMIN_DATA_PATH/
+      device: $CORE_PGADMIN_DATA_PATH/storage_pgadmin/
       o: bind
+            
   host_core_phpmyadmin_storage_volume:
     driver: local
     driver_opts:
@@ -485,9 +488,9 @@ x-common_mariadb: &common_mariadb
         memory: 1G
 
 x-common_neo4j: &common_neo4j
-  image: neo4j:5.7.0-community
+  # image: neo4j:5.7.0-community
+  image: neo4j:5.26.0-community
   restart: unless-stopped
-  user: "${HOST_USER_UID}:${HOST_USER_GID}"
   depends_on:
     core_prometheus:
       condition: service_healthy
@@ -500,6 +503,42 @@ x-common_neo4j: &common_neo4j
         memory: 2G
 
 
+configs:
+  preferences.json:
+    content: |
+      {
+        "preferences": {
+          "misc:themes:theme": "dark",
+          "browser:display:show_system_objects": true,
+          "browser:display:confirm_on_refresh_close": false,
+          "browser:display:show_user_defined_templates": true
+        }
+      }
+  servers.json:
+    content: |
+      {
+        "Servers": {
+          "1": {
+            "Name": "Production PostgreSQL",
+            "Group": "Servers",
+            "Host": "production_postgres",
+            "Port": 5432,
+            "MaintenanceDB": "postgres",
+            "Username": "production_user",
+            "SSLMode": "prefer"
+          },
+          "2": {
+            "Name": "Development PostgreSQL",
+            "Group": "Servers",
+            "Host": "development_postgres",
+            "Port": 5432,
+            "MaintenanceDB": "postgres",
+            "Username": "development_user",
+            "SSLMode": "prefer"
+          }
+        }
+      }
+      
 services:
 # Core Services
 
@@ -660,7 +699,6 @@ services:
     container_name: core_pgadmin
     image: dpage/pgadmin4:8.14.0
     restart: unless-stopped
-    user: "${HOST_USER_UID}:${HOST_USER_GID}"
     labels:
       - "local.service.name=CORE - DB Web UI: PGAdmin"
       - "local.service.description=Core PGAdmin database web ui for Postgres. Certain directories for this service are made available to the host machine for the purposes of data persistence."
@@ -687,36 +725,13 @@ services:
         condition: service_healthy
       development_postgres:
         condition: service_healthy
-    entrypoint: /bin/sh
-    command: >-
-      -c '
-      mkdir -p /pgadmin4
-      cat > /pgadmin4/servers.json <<-EOF
-        {
-          "Servers": {
-            "1": {
-              "Name": "Production PostgreSQL",
-              "Group": "Servers",
-              "Host": "production_postgres",
-              "Port": 5432,
-              "MaintenanceDB": "postgres",
-              "Username": "production_user",
-              "SSLMode": "prefer"
-            },
-            "2": {
-              "Name": "Development PostgreSQL",
-              "Group": "Servers",
-              "Host": "development_postgres",
-              "Port": 5432,
-              "MaintenanceDB": "postgres",
-              "Username": "development_user",
-              "SSLMode": "prefer"
-            }
-          }
-        }
-      EOF
-      /entrypoint.sh
-      '
+    volumes:
+      - host_core_pgadmin_storage_volume:/var/lib/pgadmin
+    configs:
+      - source: servers.json
+        target: /pgadmin4/servers.json
+      - source: preferences.json
+        target: /pgadmin4/preferences.json        
     deploy:
       resources:
         limits:
@@ -725,14 +740,12 @@ services:
     logging:
       <<: *default-logging
       options:
-        tag: "core-db-ui-pgadmin/{{.Name}}" 
-    volumes:
-      - host_core_pgadmin_storage_volume:/var/lib/pgadmin:rw       
+        tag: "core-db-ui-pgadmin/{{.Name}}"        
     networks:
       - core_monitoring_network
       - core_ai_network
       - production_db_network
-      - development_db_network
+      - development_db_network    
 
   # Core PhpMyAdmin Service
   # Accessible at: http://localhost:8083
@@ -947,7 +960,7 @@ services:
   # Healthcheck status: working
   core_openwebui:
     container_name: core_openwebui
-    image: ghcr.io/open-webui/open-webui:main
+    image: ghcr.io/open-webui/open-webui:git-1dfb479
     labels:
       - "local.service.name=Core - LLM Web UI: OpenWebUI"
       - "local.service.description=Core OpenWebUI web ui for chatting with LLMs. This service must be able to communitcate with the Ollama inference server via port 11434. Certain directories for this service are made available to the host machine for the purposes of data persistence."
@@ -1294,12 +1307,13 @@ CURRENT_GID=$(id -g)
 # Fix permissions for docker volumes
 fix_permissions() {
   local path="$1"
+  local user_id="${2:-$CURRENT_UID}"
+  local group_id="${3:-$CURRENT_GID}"
   
   echo "Fixing permissions for $path..."
   if [ -d "$path" ]; then
-    chown -R $CURRENT_UID:$CURRENT_GID "$path"
-    #chmod -R u=rwX,g=rX,o= "$path"
-    echo "Set ownership to $CURRENT_UID:$CURRENT_GID for $path"
+    sudo chown -R $user_id:$group_id "$path"
+    echo "Set ownership to $user_id:$group_id for $path"
   else
     echo "Warning: Directory $path does not exist"
   fi
@@ -1309,7 +1323,11 @@ fix_permissions() {
 echo "Fixing permissions for data directories..."
 for dir in $HOME/.docker/*/data/*; do
   if [ -d "$dir" ]; then
-    fix_permissions "$dir"
+    # Special handling for pgadmin directories
+    echo "Checking directory: $dir"
+    if [[ "$dir" != *"/pgadmin"* ]]; then      
+      fix_permissions "$dir"
+    fi
   fi
 done
 
