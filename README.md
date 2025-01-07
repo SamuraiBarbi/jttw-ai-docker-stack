@@ -19,12 +19,12 @@ The script handles
      - Development secrets directory: (`~/.docker/development/secrets`)
      - Development data directory: (`~/.docker/development/data`)
    - Initial LLM downloads for Ollama docker upon docker up:
-     - llama3.2:3b - For chat
-     - phi3.5:3.8b - For chat
-     - qwen2.5:7b - For chat
-     - qwen2.5:14b - For chat
-     - hhao/qwen2.5-coder-tools:32b - For coding
-     - mxbai-embed-large - For embedding/reading documents
+     - [llama3.2:3b](https://ollama.com/library/llama3.2:3b) - For chat
+     - [phi3.5:3.8b](https://ollama.com/library/phi3.5:3.8b) - For chat
+     - [qwen2.5:7b](https://ollama.com/library/qwen2.5:7b) - For chat
+     - [qwen2.5:14b](https://ollama.com/library/qwen2.5:14b) - For chat
+     - [hhao/qwen2.5-coder-tools:32b](https://ollama.com/library/hhao/qwen2.5-coder-tools:32b) - For coding
+     - [mxbai-embed-large](https://ollama.com/library/mxbai-embed-large) - For embedding/reading documents
    - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
    - Set up and configuration of OpenWebUI docker to allow LLM web searches using SearxNG
    - Healthchecks for all docker services ( except Portainer because fuck me I guess )
@@ -137,12 +137,12 @@ sudo systemctl restart docker
    - Docker Image: [ollama/ollama:0.5.1](https://hub.docker.com/layers/ollama/ollama/0.5.1/images/sha256-bbe7b28a899f111df1de2ebd70de0f8c55746784038dd70d537c540df23f57c1)
    - Persistent data storage
    - Installs with support using multiple AI models including:
-     - mxbai-embed-large for embedding/reading documents
-     - llama3.2:3b for chat
-     - phi3.5:3.8b for chat
-     - qwen2.5:7b for chat
-     - qwen2.5:14b for chat
-     - hhao/qwen2.5-coder-tools:32b for coding
+     - [mxbai-embed-large](https://ollama.com/library/mxbai-embed-large) for embedding/reading documents
+     - [llama3.2:3b](https://ollama.com/library/llama3.2:3b) for chat
+     - [phi3.5:3.8b](https://ollama.com/library/phi3.5:3.8b) for chat
+     - [qwen2.5:7b](https://ollama.com/library/qwen2.5:7b) for chat
+     - [qwen2.5:14b](https://ollama.com/library/qwen2.5:14b) for chat
+     - [hhao/qwen2.5-coder-tools:32b](https://ollama.com/library/hhao/qwen2.5-coder-tools:32b) for coding
 
 6. **OpenWebUI**
    - Web interface for LLMs
