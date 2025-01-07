@@ -33,7 +33,8 @@ sudo systemctl restart docker
 
 2. **Prometheus**
    - Monitoring server
-   - Access: http://localhost:9090
+   - Access: 
+     - HTTP: http://localhost:9090
    - Environment Variables: ~/.docker/core/secrets/.prometheus.env
    - Project Page: https://github.com/prometheus/prometheus
    - Docker Image: [prom/prometheus:v3.0.1](https://hub.docker.com/layers/prom/prometheus/v3.0.1/images/sha256-c4af82c47edf60ab4da6ce28d9686bc641860b86004fe382ff7ab7d1f1510d47)
@@ -41,7 +42,8 @@ sudo systemctl restart docker
 
 3. **SearxNG**
    - Privacy-respecting search engine
-   - Access: http://localhost:8084
+   - Access: 
+     - HTTP: http://localhost:8084
    - Environment Variables: ~/.docker/core/secrets/.searxng.env
    - Project Page: https://github.com/searxng/searxng
    - Docker Image: [searxng/searxng:2024.12.16-65c970bdf](https://hub.docker.com/layers/searxng/searxng/2024.12.16-65c970bdf/images/sha256-4a13ed45abe2546765d2def2b23292ae46646c50d647758895ccea629f668a9c)
@@ -49,7 +51,8 @@ sudo systemctl restart docker
 
 4. **PGAdmin**
    - Web UI for postgres database management
-   - Access: http://localhost:8082
+   - Access: 
+     - HTTP: http://localhost:8082
    - Environment Variables: ~/.docker/core/secrets/.pgadmin.env
    - Project Page: https://github.com/pgadmin-org/pgadmin4
    - Docker Image: [dpage/pgadmin4:8.14.0](https://hub.docker.com/layers/dpage/pgadmin4/8.14.0/images/sha256-1053696a89c887a2a3ee6b24a7e2614cf68227d30ff8304e61da20bc71d4dd50)
@@ -57,7 +60,8 @@ sudo systemctl restart docker
 
 5. **PHPMyAdmin**
    - Web UI for mariadb database management
-   - Access: http://localhost:8083
+   - Access: 
+     - HTTP: http://localhost:8083
    - Environment Variables: ~/.docker/core/secrets/.phpmyadmin.env
    - Project Page: https://github.com/phpmyadmin/phpmyadmin
    - Docker Image: [phpmyadmin/phpmyadmin:5.2.1](https://hub.docker.com/layers/phpmyadmin/phpmyadmin/5.2.1/images/sha256-67ba2550fd004399ab0b95b64021a88ea544011e566a9a1995180a3decb6410d)
@@ -65,7 +69,8 @@ sudo systemctl restart docker
 
 6. **Ollama**
    - Large Language Model (LLM) server
-   - Access: http://localhost:11434
+   - Access: 
+     - HTTP: http://localhost:11434
    - Environment Variables: ~/.docker/core/secrets/.ollama.env
    - Project Page: https://github.com/ollama/ollama
    - Docker Image: [ollama/ollama:0.5.1](https://hub.docker.com/layers/ollama/ollama/0.5.1/images/sha256-bbe7b28a899f111df1de2ebd70de0f8c55746784038dd70d537c540df23f57c1)
@@ -80,7 +85,8 @@ sudo systemctl restart docker
 
 7. **OpenWebUI**
    - Web interface for LLMs
-   - Access: http://localhost:11435
+   - Access: 
+     - HTTP: http://localhost:11435
    - Environment Variables: ~/.docker/core/secrets/.openwebui.env
    - Project Page: https://github.com/open-webui/open-webui
    - Docker Image: [ghcr.io/open-webui/open-webui:git-1dfb479](https://github.com/open-webui/open-webui/pkgs/container/open-webui/331304257?tag=git-1dfb479)
@@ -89,7 +95,9 @@ sudo systemctl restart docker
 ### Production Services
 1. **PHP-fpm Apache2**
    - Web server
-   - Access: http://localhost:8080
+   - Access:
+     - HTTP: http://localhost:8080
+     - HTTPS: https://localhost:8443
    - Environment Variables: ~/.docker/production/secrets/.phpfpm_apache.env
    - Project Page: https://github.com/shinsenter/php
    - Docker Image[shinsenter/phpfpm-apache:php8](https://hub.docker.com/layers/shinsenter/phpfpm-apache/php8/images/sha256-371fcee525c04dd95898bb2cf0590c8fa163402374d5141f75dcbbc6b3088e11)
@@ -98,7 +106,8 @@ sudo systemctl restart docker
 
 2. **Postgres**
    - Production database
-   - Access: http://localhost:5432
+   - Access: 
+     - TCP: http://localhost:5432
    - Environment Variables: ~/.docker/production/secrets/.postgres.env
    - Project Page: https://github.com/postgres/postgres
    - Docker Image: [postgres:12.22](https://hub.docker.com/layers/library/postgres/12.22/images/sha256-25b2d01b1bb6c995ee5cd865019d030158309b7811ac5809060b6c69c4eaea2e)
@@ -107,7 +116,8 @@ sudo systemctl restart docker
 
 3. **MariaDB**
    - Production database
-   - Access: http://localhost:3306
+   - Access: 
+     - TCP: http://localhost:3306
    - Environment Variables: ~/.docker/production/secrets/.mariadb.env
    - Project Page: https://github.com/MariaDB/server
    - Docker Image: [mariadb:10.6](https://hub.docker.com/layers/library/mariadb/10.6/images/sha256-5e037317c5a20c7cde15ce4404e8f363ab39eddb3d72379eaa3a9db882efaf6d)
@@ -116,7 +126,9 @@ sudo systemctl restart docker
 
 4. **Neo4j**
    - Graph database
-   - Access: http://localhost:7474
+   - Access: 
+     - HTTP: http://localhost:7474
+     - BOLT: bolt://localhost:7687
    - Environment Variables: ~/.docker/production/secrets/.neo4j.env
    - Project Page: https://github.com/neo4j/neo4j
    - Docker Image: [neo4j:5.26.0-community](https://hub.docker.com/layers/library/neo4j/5.26.0-community/images/sha256-4c59f45618c46b3e189d9ec36242c51396a9180ea7c494a89769671a535771d3)
@@ -126,7 +138,9 @@ sudo systemctl restart docker
 ### Development Services
 1. **PHP-fpm Apache2**
    - Development web server
-   - Access: http://localhost:8081
+   - Access: 
+     - HTTP: http://localhost:8081
+     - HTTPS: https://localhost:8444
    - Environment Variables: ~/.docker/development/secrets/.phpfpm_apache.env
    - Project Page: https://github.com/shinsenter/php
    - Docker Image: [shinsenter/phpfpm-apache:php8](https://hub.docker.com/layers/shinsenter/phpfpm-apache/php8/images/sha256-371fcee525c04dd95898bb2cf0590c8fa163402374d5141f75dcbbc6b3088e11)
@@ -135,7 +149,8 @@ sudo systemctl restart docker
 
 2. **Postgres**
    - Development database
-   - Access: http://localhost:5433
+   - Access: 
+     - TCP: http://localhost:5433
    - Environment Variables: ~/.docker/development/secrets/.postgres.env
    - Project Page: https://github.com/postgres/postgres
    - Docker Image: [postgres:12.22](https://hub.docker.com/layers/library/postgres/12.22/images/sha256-25b2d01b1bb6c995ee5cd865019d030158309b7811ac5809060b6c69c4eaea2e)
@@ -145,7 +160,8 @@ sudo systemctl restart docker
 
 3. **MariaDB**
    - Development database
-   - Access: http://localhost:3307
+   - Access: 
+     - TCP: http://localhost:3307
    - Environment Variables: ~/.docker/development/secrets/.mariadb.env
    - Project Page: https://github.com/MariaDB/server
    - Docker Image: [mariadb:10.6](https://hub.docker.com/layers/library/mariadb/10.6/images/sha256-5e037317c5a20c7cde15ce4404e8f363ab39eddb3d72379eaa3a9db882efaf6d)
@@ -155,7 +171,9 @@ sudo systemctl restart docker
 
 4. **Neo4j**
    - Development graph database
-   - Access: http://localhost:7475
+   - Access: 
+     - HTTP: http://localhost:7475
+     - BOLT: bolt://localhost:7688
    - Environment Variables: ~/.docker/development/secrets/.neo4j.env
    - Project Page: https://github.com/neo4j/neo4j
    - Docker Image: [neo4j:5.26.0-community](https://hub.docker.com/layers/library/neo4j/5.26.0-community/images/sha256-4c59f45618c46b3e189d9ec36242c51396a9180ea7c494a89769671a535771d3)
