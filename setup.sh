@@ -625,8 +625,8 @@ services:
     networks:
       - core_monitoring_network
       - core_ai_network
-      - production_db_network
-      - development_db_network  
+      - production_app_network
+      - development_app_network  
 
 
   # Core PGAdmin Service
@@ -678,7 +678,6 @@ services:
         tag: "core-db-ui-pgadmin/{{.Name}}"        
     networks:
       - core_monitoring_network
-      - core_ai_network
       - production_db_network
       - development_db_network    
 
@@ -1049,7 +1048,6 @@ services:
       - host_production_neo4j_logs_volume:/logs
     networks:
       - core_monitoring_network
-      - core_ai_network
       - production_app_network
       - production_db_network
 
@@ -1178,35 +1176,34 @@ services:
       - host_development_neo4j_logs_volume:/logs
     networks:
       - core_monitoring_network
-      - core_ai_network
       - development_app_network
       - development_db_network
 
 networks:
 # Core Networks
-  # Core Monitoring Network is used to monitor all of our services/docker containers ( Portainer )
+  # Core Monitoring Network is used to monitor all of our services/docker containers ( Portainer and all other docker services )
   core_monitoring_network:
     driver: bridge
-  # Core Remote Access Network is used for our remote access related services/docker containers ( Zrok )
+  # Core Remote Access Network is used for our remote access related services/docker containers ( In future updates Zrok, Caddy, Traefik )
   core_remote_access_network:
     driver: bridge
-  # Core AI Network is used for our AI related services/docker containers ( Ollama, TGI, and OpenWebUI )
+  # Core AI Network is used for our AI related services/docker containers ( SearxNG, Ollama, OpenWebUI )
   core_ai_network:
     driver: bridge
 
 # Production Networks
-  # Production App Network is used for our web application related services/docker containers ( Apache2, PHP, MariaDB, Neo4j, Ollama, TGI )
+  # Production App Network is used for our web application related services/docker containers ( PHP Apache2, Postgres, MariaDB, Neo4j, SearxNG, Ollama )
   production_app_network:
     driver: bridge
-  # Production DB Network is used for our database related services/docker containers ( MariaDB, Neo4j, PHPMyAdmin )
+  # Production DB Network is used for our database related services/docker containers ( Postgres, MariaDB, Neo4j, PGAdmin, PHPMyAdmin )
   production_db_network:
     driver: bridge
 
 # Development Networks
-  # Development App Network is used for our web application related services/docker containers ( Apache2, PHP, MariaDB, Neo4j, Ollama, TGI )
+  # Development App Network is used for our web application related services/docker containers ( PHP Apache2, Postgres, MariaDB, Neo4j, SearxNG, Ollama )
   development_app_network:
     driver: bridge
-  # Development DB Network is used for our database related services/docker containers ( MariaDB, Neo4j, PHPMyAdmin )
+  # Development DB Network is used for our database related services/docker containers ( Postgres, MariaDB, Neo4j, PGAdmin, PHPMyAdmin )
   development_db_network:
     driver: bridge      
 EOF
