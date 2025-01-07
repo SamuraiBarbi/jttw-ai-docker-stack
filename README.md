@@ -28,6 +28,8 @@ The script handles
    - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
    - Set up and configuration of OpenWebUI docker to allow LLM web searches using SearxNG
    - Set up and configuration of OpenWebUI docker to allow for embedding/reading documents using mxbai-embed-large
+   - PGAdmin configured with access to production and development Postgres
+   - PHPMyAdmin configured with access to production and development MariaDB
    - Healthchecks for all docker services ( except Portainer because fuck me I guess )
    - Dependency checks for various docker services
    - Logging
