@@ -27,6 +27,7 @@ The script handles
      - [mxbai-embed-large](https://ollama.com/library/mxbai-embed-large) - For embedding/reading documents
    - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
    - Set up and configuration of OpenWebUI docker to allow LLM web searches using SearxNG
+   - Set up and configuration of OpenWebUI docker to allow for embedding/reading documents using mxbai-embed-large
    - Healthchecks for all docker services ( except Portainer because fuck me I guess )
    - Dependency checks for various docker services
    - Logging
