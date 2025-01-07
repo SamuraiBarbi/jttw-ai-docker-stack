@@ -7,7 +7,7 @@ The script handles
    - Version tagged docker images for each service
    - Separate docker services for ai, development, production, and monitoring
    - Secret generation in the form of docker service specific .env files with appropriate environment variables   
-   - Persistent data storage directory creation, and separate data directories for each service
+   - Persistent data storage directory creation, and separate data directories configuration for each service
      - Base directory: (`~/.docker`)
      - Core directory: (`~/.docker/core`)
      - Core secrets directory: (`~/.docker/core/secrets`)
