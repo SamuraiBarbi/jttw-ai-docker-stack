@@ -28,7 +28,7 @@ sudo systemctl restart docker
    - Environment Variables: ~/.docker/core/secrets/.portainer.env
    - Project Page: https://github.com/portainer/portainer
    - Docker Image: [portainer/portainer-ce:2.21.4](https://hub.docker.com/layers/portainer/portainer-ce/2.21.4/images/sha256-a79ade2af4257a1a77e33fefdf06ec47606c0ce0dbff3146f6426c8a209908f4?context=explore)
-   
+   - Persistent data storage
    - Manages Docker containers and services
 
 2. **Prometheus**
@@ -38,6 +38,7 @@ sudo systemctl restart docker
    - Environment Variables: ~/.docker/core/secrets/.prometheus.env
    - Project Page: https://github.com/prometheus/prometheus
    - Docker Image: [prom/prometheus:v3.0.1](https://hub.docker.com/layers/prom/prometheus/v3.0.1/images/sha256-c4af82c47edf60ab4da6ce28d9686bc641860b86004fe382ff7ab7d1f1510d47)
+   - Persistent data storage
    - Collects and stores metrics from all services
 
 3. **SearxNG**
@@ -47,7 +48,8 @@ sudo systemctl restart docker
    - Environment Variables: ~/.docker/core/secrets/.searxng.env
    - Project Page: https://github.com/searxng/searxng
    - Docker Image: [searxng/searxng:2024.12.16-65c970bdf](https://hub.docker.com/layers/searxng/searxng/2024.12.16-65c970bdf/images/sha256-4a13ed45abe2546765d2def2b23292ae46646c50d647758895ccea629f668a9c)
-   - Installs with support for both HTML and JSON search formats
+   - Persistent data storage
+   - Installs pre-configured with support for both HTML and JSON search formats
 
 4. **PGAdmin**
    - Web UI for postgres database management
@@ -56,7 +58,8 @@ sudo systemctl restart docker
    - Environment Variables: ~/.docker/core/secrets/.pgadmin.env
    - Project Page: https://github.com/pgadmin-org/pgadmin4
    - Docker Image: [dpage/pgadmin4:8.14.0](https://hub.docker.com/layers/dpage/pgadmin4/8.14.0/images/sha256-1053696a89c887a2a3ee6b24a7e2614cf68227d30ff8304e61da20bc71d4dd50)
-   - Manages both production and development Postgres instances
+   - Persistent data storage
+   - Installs pre-configured with access to both production and development Postgres databases
 
 5. **PHPMyAdmin**
    - Web UI for mariadb database management
@@ -65,7 +68,9 @@ sudo systemctl restart docker
    - Environment Variables: ~/.docker/core/secrets/.phpmyadmin.env
    - Project Page: https://github.com/phpmyadmin/phpmyadmin
    - Docker Image: [phpmyadmin/phpmyadmin:5.2.1](https://hub.docker.com/layers/phpmyadmin/phpmyadmin/5.2.1/images/sha256-67ba2550fd004399ab0b95b64021a88ea544011e566a9a1995180a3decb6410d)
+   - Persistent data storage
    - Manages both production and development MariaDB instances
+   - Installs pre-configured with access to production and development MariaDB databases
 
 6. **Ollama**
    - Large Language Model (LLM) server
@@ -74,6 +79,7 @@ sudo systemctl restart docker
    - Environment Variables: ~/.docker/core/secrets/.ollama.env
    - Project Page: https://github.com/ollama/ollama
    - Docker Image: [ollama/ollama:0.5.1](https://hub.docker.com/layers/ollama/ollama/0.5.1/images/sha256-bbe7b28a899f111df1de2ebd70de0f8c55746784038dd70d537c540df23f57c1)
+   - Persistent data storage
    - Installs with support using multiple AI models including:
      - mxbai-embed-large for embedding/reading documents
      - llama3.2:3b for chat
@@ -81,7 +87,6 @@ sudo systemctl restart docker
      - qwen2.5:7b for chat
      - qwen2.5:14b for chat
      - hhao/qwen2.5-coder-tools:32b for coding
-   - Installs pre-configured with websearch enabled using SearxNG
 
 7. **OpenWebUI**
    - Web interface for LLMs
@@ -90,7 +95,10 @@ sudo systemctl restart docker
    - Environment Variables: ~/.docker/core/secrets/.openwebui.env
    - Project Page: https://github.com/open-webui/open-webui
    - Docker Image: [ghcr.io/open-webui/open-webui:git-1dfb479](https://github.com/open-webui/open-webui/pkgs/container/open-webui/331304257?tag=git-1dfb479)
+   - Persistent data storage
    - Integrates with Ollama for AI interactions
+   - Installs pre-configured with websearch enabled using SearxNG
+   - Installs pre-configured with embedding enabled using mxbai-embed-large embedding model
 
 ### Production Services
 1. **PHP-fpm Apache2**
