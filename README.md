@@ -353,7 +353,11 @@ sudo systemctl restart docker
    - Thinking of adding a Caddy docker for certificate management and cert auto-renewal under core services.
    - Considering addition of a Traefik docker for routing and load balancing under core services.
    - May add a Redis docker for caching however it may be in the form of separate production and development Redis docker instances. I'm looking into web interfaces for managing Redis instances soooo if I decide to add Redis as a part of the stack I'll also have to consider the addition of a web interface for it.
-   - In addition to these TGI, llama.cpp as an alternative to Ollama, litellm, Promptfoo, and Guidance are also components I'm weighing making part of this stack.
+   - In addition to these the following are also components I'm weighing making part of this stack.
+     - TGI, llama.cpp or koboldcpp in addition to Ollama as part of the stack for when something is being fucky with Ollama
+     - litellm
+     - Promptfoo
+     - Guidance
 
 ## Contributing
 
