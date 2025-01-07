@@ -359,7 +359,7 @@ sudo systemctl restart docker
      - Promptfoo or an adjacent project
      - Guidance or an adjacent project
      - Text-to-speech and/or Speech-to-text dockers
-     - An image generation dockers using SD Forge, SwarmUI, or something similar which can be access via a web interface and has api that can be utilized to generate images
+     - An image generation docker using SD Forge, SwarmUI, or something similar which can be accessed via a web interface and has an API that can be utilized to generate images
 
 ## Contributing
 
