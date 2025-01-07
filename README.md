@@ -23,13 +23,39 @@ The script handles
    - Deployment resource allocation and limits
    - Port exposure for various docker services so you can access them from outside the container
    - Network compartmentalization:
-     - core_monitoring_network - Core Monitoring Network is used to monitor all of our services/docker containers ( Portainer )
-     - core_remote_access_network - Core Remote Access Network is used for our remote access related services/docker containers ( Zrok )
-     - core_ai_network - Core AI Network is used for our AI related services/docker containers ( Ollama, TGI, and OpenWebUI )
-     - production_app_network - Production App Network is used for our web application related services/docker containers ( Apache2, PHP, MariaDB, Neo4j, Ollama, TGI )
-     - production_db_network - Production DB Network is used for our database related services/docker containers ( MariaDB, Neo4j, PHPMyAdmin )
-     - development_app_network - Development App Network is used for our web application related services/docker containers ( Apache2, PHP, MariaDB, Neo4j, Ollama, TGI )
-     - development_db_network - Development DB Network is used for our database related services/docker containers ( MariaDB, Neo4j, PHPMyAdmin )
+     - core_monitoring_network - Core Monitoring Network is used to monitor all of our services/docker containers
+       - Portainer and all other docker services
+     - core_remote_access_network - Core Remote Access Network is used for our remote access related services/docker containers ( In future updates Zrok, Caddy, Traefik )
+     - core_ai_network - Core AI Network is used for our AI related services/docker containers
+       - SearxNG
+       - Ollama
+       - OpenWebUI
+     - production_app_network - Production App Network is used for our web application related services/docker containers
+       - PHP Apache2
+       - Postgres
+       - MariaDB
+       - Neo4j
+       - SearxNG
+       - Ollama
+     - production_db_network - Production DB Network is used for our database related services/docker containers
+       - Postgres
+       - MariaDB
+       - Neo4j
+       - PGAdmin
+       - PHPMyAdmin
+     - development_app_network - Development App Network is used for our web application related services/docker containers
+       - PHP Apache2
+       - Postgres
+       - MariaDB
+       - Neo4j
+       - SearxNG
+       - Ollama
+     - development_db_network - Development DB Network is used for our database related services/docker containers
+       - Postgres
+       - MariaDB
+       - Neo4j
+       - PGAdmin
+       - PHPMyAdmin
 
 
 The following may be needed in order for Nvidia GPU cards to work with docker.
