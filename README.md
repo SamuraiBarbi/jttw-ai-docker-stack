@@ -74,7 +74,12 @@ The script handles
        - PHPMyAdmin
 
 
-The following may be needed in order for Nvidia GPU cards to work with docker.
+## For the GPU Rich People
+
+Look at you swinging your big dick with your GPU money. You get to run your language models at fullspeed ( provided you have enough VRAM ).
+
+The following may be needed in order for Nvidia GPU cards to work with docker. If you have an AMD card I have no idea what you need to do.
+
 ```bash
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
   && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
@@ -90,6 +95,46 @@ sudo apt-get update
 sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 ```
+
+## For the GPU Poor People
+
+WOMP, WOMP, big dick GPU purchases were not on your bingo card this year. The good news is you can still use this docker stack with LLMs but they'll just respond slower than they would than if you had a GPU to cram them into VRAM. Using this method will limit your Ollama docker to using CPU and RAM only to run your LLMs so you'll want to make sure you have enough RAM.
+
+The following modification needs to be done with the generated (`docker-compose.yml`) file after you've run the script.
+
+You'll want to find the services section of the (`docker-compose.yml`) file and look for where the core_ollama service is defined.
+
+You can perform this quickly by searching for (`container_name: core_ollama`)
+
+Scroll down to the deploy section of the core_ollama service. That should will look like this:
+
+```yaml
+    deploy:
+      resouresc:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+        limits:
+          memory: 64G
+```
+
+Remove the (`reservations`) section from the `deploy` section. Your deploy should now look like this:
+
+```yaml
+    deploy:
+      resources:
+        limits:
+          memory: 64G
+```
+
+Then save the file and when you next bring the container up it should run with CPU support only.
+
+```bash
+docker-compose up -d --build
+```
+
 
 ## Services Overview
 
@@ -170,7 +215,7 @@ sudo systemctl restart docker
 
 ### Production Services
 1. **PHP-fpm Apache2**
-   - Web server
+   - Production Web server
    - Access:
      - HTTP: http://localhost:8080
      - HTTPS: https://localhost:8443
@@ -204,7 +249,7 @@ sudo systemctl restart docker
    - Used for traditional data
 
 4. **Neo4j**
-   - Graph database
+   - Production graph database
    - Access: 
      - HTTP: http://localhost:7474
      - BOLT: bolt://localhost:7687
