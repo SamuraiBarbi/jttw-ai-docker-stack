@@ -1,7 +1,7 @@
 # JTTW-AI Docker Stack
 
 ## Overview
-Jesus Take the Wheel-AI Docker Stack: This project provides a comprehensive Docker-based development environment setup script (`setup.sh`) that configures multiple services for web development, monitoring, and AI capabilities. This is meant to be used in a Linux environment and should be compatible with Window WSL environments. In the case of WSL environments it's recommended to use WSL2 and ensure you've enabled Docker access to Nvidia GPU support.
+Jesus Take the Wheel-AI Docker Stack: This project provides a comprehensive Docker-based development environment setup script (`setup.sh`) that configures multiple services for web development, monitoring, and AI capabilities. This is meant to be used in a Linux environment and should be compatible with Windows WSL environments. In the case of WSL environments it's recommended to use WSL2 and ensure you've enabled Docker access to Nvidia GPU support.
 
 ## WTF Does This Do
 The script handles 
