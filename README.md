@@ -5,9 +5,19 @@ Jesus Take the Wheel-AI Docker Stack: This project provides a comprehensive Dock
 
 The script handles 
    - Version tagged images for each service
+   - Separate docker services for ai,development, production, and monitoring
+   - Secret generation in the form of docker service specific .env files with appropriate environment variables   
    - Persitent data storage directory creation
-   - Separate docker services for development, production, and monitoring
-   - Secret generation in the form of docker service specific .env files with appropriate environment variables
+     - Base directory: (`~/.docker`)
+     - Core directory: (`~/.docker/core`)
+     - Core secrets directory: (`~/.docker/core/secrets`)
+     - Core data directory: (`~/.docker/core/data`)
+     - Production directory: (`~/.docker/production`)
+     - Production secrets directory: (`~/.docker/production/secrets`)
+     - Production data directory: (`~/.docker/production/data`)
+     - Development directory: (`~/.docker/development`)
+     - Development secrets directory: (`~/.docker/development/secrets`)
+     - Development data directory: (`~/.docker/development/data`)
    - Initial LLM downloads for Ollama docker upon docker up:
      - llama3.2:3b - For chat
      - phi3.5:3.8b - For chat
