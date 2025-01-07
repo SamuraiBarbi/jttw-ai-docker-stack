@@ -4,7 +4,7 @@
 Jesus Take the Wheel-AI Docker Stack: This project provides a comprehensive Docker-based development environment setup script (`setup.sh`) that configures multiple services for web development, monitoring, and AI capabilities. 
 
 The script handles 
-   - Version tagged images for each service
+   - Version tagged docker images for each service
    - Separate docker services for ai,development, production, and monitoring
    - Secret generation in the form of docker service specific .env files with appropriate environment variables   
    - Persitent data storage directory creation, and separate data directories for each service
