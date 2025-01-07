@@ -1,8 +1,38 @@
 # JTTW-AI Docker Stack
 
 ## Overview
-Jesus Take the Wheel-AI Docker Stack: This project provides a comprehensive Docker-based development environment setup script (`setup.sh`) that configures multiple services for web development, monitoring, and AI capabilities. The script handles directory creation, secret generation, initial LLM downloads llama3.2:3b, phi3.5:3.8b, qwen2.5:7b, qwen2.5:14b, and hhao/qwen2.5-coder-tools:32b including embedding model mxbai-embed-large, set up and configuration of OpenWebUI and SearxNG to allow LLM web searches using SearxNG. and Docker configuration.
+Jesus Take the Wheel-AI Docker Stack: This project provides a comprehensive Docker-based development environment setup script (`setup.sh`) that configures multiple services for web development, monitoring, and AI capabilities. 
 
+The script handles 
+   - Version tagged images for each service
+   - Persitent data storage directory creation
+   - Separate docker services for development, production, and monitoring
+   - Secret generation in the form of docker service specific .env files with appropriate environment variables
+   - Initial LLM downloads for Ollama docker upon docker up:
+     - llama3.2:3b - For chat
+     - phi3.5:3.8b - For chat
+     - qwen2.5:7b - For chat
+     - qwen2.5:14b - For chat
+     - hhao/qwen2.5-coder-tools:32b - For coding
+     - mxbai-embed-large - For embedding/reading documents
+   - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
+   - Set up and configuration of OpenWebUI docker to allow LLM web searches using SearxNG
+   - Healthchecks for all docker services ( except Portainer because fuck me I guess )
+   - Dependency checks for various docker services
+   - Logging
+   - Deployment resource allocation and limits
+   - Port exposure for various docker services so you can access them from outside the container
+   - Network compartmentalization:
+     - core_monitoring_network - Core Monitoring Network is used to monitor all of our services/docker containers ( Portainer )
+     - core_remote_access_network - Core Remote Access Network is used for our remote access related services/docker containers ( Zrok )
+     - core_ai_network - Core AI Network is used for our AI related services/docker containers ( Ollama, TGI, and OpenWebUI )
+     - production_app_network - Production App Network is used for our web application related services/docker containers ( Apache2, PHP, MariaDB, Neo4j, Ollama, TGI )
+     - production_db_network - Production DB Network is used for our database related services/docker containers ( MariaDB, Neo4j, PHPMyAdmin )
+     - development_app_network - Development App Network is used for our web application related services/docker containers ( Apache2, PHP, MariaDB, Neo4j, Ollama, TGI )
+     - development_db_network - Development DB Network is used for our database related services/docker containers ( MariaDB, Neo4j, PHPMyAdmin )
+
+
+The following may be needed in order for Nvidia GPU cards to work with docker.
 ```bash
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
   && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
