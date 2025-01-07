@@ -120,7 +120,7 @@ Scroll down to the deploy section of the core_ollama service. That should will l
           memory: 64G
 ```
 
-Remove the (`reservations`) section from the `deploy` section. Your deploy should now look like this:
+Remove the (`reservations:`) section from the `deploy:` section. Your deploy should now look like this:
 
 ```yaml
     deploy:
