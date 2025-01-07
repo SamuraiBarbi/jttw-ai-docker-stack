@@ -155,7 +155,7 @@ sudo systemctl restart docker
      - [hhao/qwen2.5-coder-tools:32b](https://ollama.com/library/hhao/qwen2.5-coder-tools:32b) for coding
 
 6. **OpenWebUI**
-   - Web interface for LLMs 
+   - Web UI for LLMs 
    - Access: 
      - HTTP: http://localhost:11435
    - Secrets Environment Variables File: ~/.docker/core/secrets/.openwebui.env
