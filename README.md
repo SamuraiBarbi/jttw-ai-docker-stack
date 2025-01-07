@@ -27,6 +27,7 @@ The script handles
      - [hhao/qwen2.5-coder-tools:32b](https://ollama.com/library/hhao/qwen2.5-coder-tools:32b) - For coding
      - [mxbai-embed-large](https://ollama.com/library/mxbai-embed-large) - For embedding/reading documents
    - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
+   - Set up and configuration of OpenWebUI with access to Ollama docker service for AI interactions
    - Set up and configuration of OpenWebUI docker to allow LLM web searches using SearxNG
    - Set up and configuration of OpenWebUI docker to allow for embedding/reading documents using mxbai-embed-large
    - PGAdmin configured with access to production and development Postgres
