@@ -27,51 +27,86 @@ CORE_DATA_PATH="$CORE_PATH/data"
 PRODUCTION_DATA_PATH="$PRODUCTION_PATH/data"
 DEVELOPMENT_DATA_PATH="$DEVELOPMENT_PATH/data"
 
-# Define core service data path and environment file variables
+# Define core service data path, environment file variables, and ports
 CORE_PORTAINER_DATA_PATH="$CORE_DATA_PATH/portainer"
 CORE_PORTAINER_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.portainer.env"
+CORE_PORTAINER_HOST_HTTP_PORT=9000
+CORE_PORTAINER_CONTAINER_HTTP_PORT=9000
 
 CORE_SEARXNG_DATA_PATH="$CORE_DATA_PATH/searxng"
 CORE_SEARXNG_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.searxng.env"
+CORE_SEARXNG_HOST_HTTP_PORT=8084
+CORE_SEARXNG_CONTAINER_HTTP_PORT=8080
 
 CORE_PGADMIN_DATA_PATH="$CORE_DATA_PATH/pgadmin"
 CORE_PGADMIN_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.pgadmin.env"
+CORE_PGADMIN_HOST_HTTP_PORT=8082
+CORE_PGADMIN_CONTAINER_HTTP_PORT=80
 
 CORE_PHPMYADMIN_DATA_PATH="$CORE_DATA_PATH/phpmyadmin"
 CORE_PHPMYADMIN_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.phpmyadmin.env"
+CORE_PHPMYADMIN_HOST_HTTP_PORT=8083
+CORE_PHPMYADMIN_CONTAINER_HTTP_PORT=80
 
 CORE_OLLAMA_DATA_PATH="$CORE_DATA_PATH/ollama"
 CORE_OLLAMA_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.ollama.env"
+CORE_OLLAMA_HOST_HTTP_PORT=11434
+CORE_OLLAMA_CONTAINER_HTTP_PORT=11434
 
 CORE_OPENWEBUI_DATA_PATH="$CORE_DATA_PATH/openwebui"
 CORE_OPENWEBUI_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.openwebui.env"
+CORE_OPENWEBUI_HOST_HTTP_PORT=11435
+CORE_OPENWEBUI_CONTAINER_HTTP_PORT=8080
 
 # Define production service data path and environment file variables
 PRODUCTION_PHPFPM_APACHE_DATA_PATH="$PRODUCTION_DATA_PATH/phpfpm_apache"
 PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.phpfpm_apache.env" 
+PRODUCTION_PHPFPM_APACHE_HOST_HTTP_PORT=8080
+PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT=80
+PRODUCTION_PHPFPM_APACHE_HOST_HTTPS_PORT=8443
+PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTPS_PORT=443
 
 PRODUCTION_POSTGRES_DATA_PATH="$PRODUCTION_DATA_PATH/postgres"
 PRODUCTION_POSTGRES_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.postgres.env"
+PRODUCTION_POSTGRES_HOST_TCP_PORT=5432
+PRODUCTION_POSTGRES_CONTAINER_TCP_PORT=5432
 
 PRODUCTION_MARIADB_DATA_PATH="$PRODUCTION_DATA_PATH/mariadb"
 PRODUCTION_MARIADB_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.mariadb.env"
+PRODUCTION_MARIADB_HOST_TCP_PORT=3306
+PRODUCTION_MARIADB_CONTAINER_TCP_PORT=3306
 
 PRODUCTION_NEO4J_DATA_PATH="$PRODUCTION_DATA_PATH/neo4j"
 PRODUCTION_NEO4J_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.neo4j.env"
+PRODUCTION_NEO4J_HOST_HTTP_PORT=7474
+PRODUCTION_NEO4J_CONTAINER_HTTP_PORT=7474
+PRODUCTION_NEO4J_HOST_BOLT_PORT=7687
+PRODUCTION_NEO4J_CONTAINER_BOLT_PORT=7687
 
 # Define development service data path and environment file variables
 DEVELOPMENT_PHPFPM_APACHE_DATA_PATH="$DEVELOPMENT_DATA_PATH/phpfpm_apache"
 DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.phpfpm_apache.env"
+DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT=8081
+DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT=80
+DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT=8444
+DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT=443
 
 DEVELOPMENT_POSTGRES_DATA_PATH="$DEVELOPMENT_DATA_PATH/postgres"
 DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.postgres.env"
+DEVELOPMENT_POSTGRES_HOST_TCP_PORT=5433
+DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT=5432
 
 DEVELOPMENT_MARIADB_DATA_PATH="$DEVELOPMENT_DATA_PATH/mariadb"
 DEVELOPMENT_MARIADB_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.mariadb.env"
+DEVELOPMENT_MARIADB_HOST_TCP_PORT=3307
+DEVELOPMENT_MARIADB_CONTAINER_TCP_PORT=3306
 
 DEVELOPMENT_NEO4J_DATA_PATH="$DEVELOPMENT_DATA_PATH/neo4j"
 DEVELOPMENT_NEO4J_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.neo4j.env"
-
+DEVELOPMENT_NEO4J_HOST_HTTP_PORT=7475
+DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT=7474
+DEVELOPMENT_NEO4J_HOST_BOLT_PORT=7688
+DEVELOPMENT_NEO4J_CONTAINER_BOLT_PORT=7687
 
 # Logging function
 log() {
@@ -133,7 +168,8 @@ create_project_structure() {
 
 # Function to generate a random string
 generate_random_string() {
-  openssl rand -base64 32 | tr -d '/+=' | cut -c1-32
+  #openssl rand -base64 32 | tr -d '/+=' | cut -c1-32
+  cat /dev/urandom | tr -dc 'a-zA-Z0-9!@#%^&*()_+{}[]|:;<>?,.~`' | head -c 32
 }
 
 # Generate secure passwords
@@ -166,7 +202,8 @@ generate_secrets() {
   if [ ! -f "$CORE_PHPMYADMIN_ENVIRONMENT_FILE" ]; then    
     sudo -u $USER touch $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to create core .phpmyadmin.env."
     echo "PMA_HOSTS=production_mariadb,development_mariadb" > $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_HOSTS to core .phpmyadmin.env."
-    echo "PMA_PORTS=3306,3306" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_PORTS to core .phpmyadmin.env."    
+    echo "PMA_PORTS=$PRODUCTION_MARIADB_CONTAINER_TCP_PORT,$DEVELOPMENT_MARIADB_CONTAINER_TCP_PORT" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_PORTS to core .phpmyadmin.env."    
+    # May need to add these in the future if I revisit deeper automated phpmyadmin configuration
     # echo "PMA_PMADB=development_mariadb" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_PMADB to core .phpmyadmin.env."
     # echo "PMA_CONTROLUSER=pma" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_CONTROLUSER to core .phpmyadmin.env."
     # echo "PMA_CONTROLPASS=$(generate_random_string)" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_CONTROLPASS to core .phpmyadmin.env."
@@ -175,16 +212,16 @@ generate_secrets() {
   if [ ! -f "$CORE_OLLAMA_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to create core .ollama.env."
     echo "OLLAMA_FLASH_ATTENTION=1" > $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to write OLLAMA_FLASH_ATTENTION to core .ollama.env."
-    echo "OLLAMA_API_BASE_URL=http://127.0.0.1:11434" >> $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to write OLLAMA_BASE_URL to core .ollama.env."
+    echo "OLLAMA_API_BASE_URL=http://127.0.0.1:$CORE_OLLAMA_CONTAINER_HTTP_PORT" >> $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to write OLLAMA_BASE_URL to core .ollama.env."
     echo "OLLAMA_HOST=0.0.0.0" >> $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to write OLLAMA_HOST to core .ollama.env."
   fi
 
   if [ ! -f "$CORE_OPENWEBUI_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to create core .openwebui.env."
     echo "WEBUI_SECRET_KEY=$(generate_random_string)" > $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write WEBUI_SECRET_KEY to core .openwebui.env."    
-    echo "OLLAMA_BASE_URLS=http://core_ollama:11434" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write OLLAMA_BASE_URLS to core .openwebui.env."
+    echo "OLLAMA_BASE_URLS=http://core_ollama:$CORE_OLLAMA_CONTAINER_HTTP_PORT" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write OLLAMA_BASE_URLS to core .openwebui.env."
     echo "RAG_EMBEDDING_ENGINE=ollama" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_EMBEDDING_ENGINE to core .openwebui.env."
-    echo "RAG_OLLAMA_BASE_URL=http://core_ollama:11434" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_OPENAI_API_BASE_URL to core .openwebui.env."
+    echo "RAG_OLLAMA_BASE_URL=http://core_ollama:$CORE_OLLAMA_CONTAINER_HTTP_PORT" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_OPENAI_API_BASE_URL to core .openwebui.env."
     echo "RAG_EMBEDDING_MODEL=mxbai-embed-large" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_EMBEDDING_MODEL to core .openwebui.env."
     echo "ENABLE_RAG_WEB_SEARCH=True" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write ENABLE_RAG_WEB_SEARCH to core .openwebui.env."
     echo "ENABLE_SEARCH_QUERY=True" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write ENABLE_SEARCH_QUERY to core .openwebui.env."
@@ -251,7 +288,7 @@ generate_secrets() {
   fi
 
   # Set specific permissions for secrets directories
-  # sudo -u $USER chmod -R 700 $BASE_PATH/*/secrets/ || error "Failed to set permissions for secrets directories."
+  sudo -u $USER chmod -R 700 $BASE_PATH/*/secrets/ || error "Failed to set permissions for secrets directories."
 
   log "Secrets generated and stored successfully"
 }
@@ -261,17 +298,18 @@ create_docker_configs() {
   log "Creating Docker configuration files..."
 
   cat > docker-compose.yml << EOF
-# sudo -S docker compose down --remove-orphans
-# sudo -S docker system prune -af
-# sudo -S docker ps -a && echo '=== Images ===' && echo darkness | sudo -S docker images && echo '=== Networks ===' && echo darkness | sudo -S docker network ls
-# sudo rm -rf $BASE_PATH
-# cd $HOME/Documents/projects/jttw-ai-docker-stack && bash setup.sh
-# cd $HOME/Documents/projects/jttw-ai-docker-stack && sudo -S docker compose up -d
-# docker logs production_mariadb
-# docker exec core_ollama ollama list
-# ollama pull hf.co/unsloth/Qwen2.5-Coder-32B-Instruct-128K-GGUF:Q4_K_M
+# To stop the containers, run: sudo -S docker compose down --remove-orphans
+# To remove the containers, run: sudo -S docker compose down --remove-orphans && sudo -S docker system prune -af
+# To list the containers, run: sudo -S docker ps -a && echo '=== Images ===' && echo darkness | sudo -S docker images && echo '=== Networks ===' && echo darkness | sudo -S docker network ls
+# To remove all persisted volume data, run: sudo rm -rf $BASE_PATH
+# To rebuild the project, run: cd $HOME/Documents/projects/jttw-ai-docker-stack && bash setup.sh
+# To start the project, run: cd $HOME/Documents/projects/jttw-ai-docker-stack && sudo -S docker compose up -d
+# Example to get a docker containers logs: docker logs production_mariadb
+# Example to execute a command in a container: docker exec core_ollama ollama list
+
 volumes:
 # Core volumes
+
   host_core_storage_volume:
     driver: local
     driver_opts:
@@ -322,8 +360,8 @@ volumes:
       device: $CORE_OPENWEBUI_DATA_PATH/
       o: bind           
 
-
 # Production volumes
+
   host_production_secrets_volume:
     driver: local
     driver_opts:
@@ -374,6 +412,7 @@ volumes:
       o: bind
 
 # Development volumes
+
   host_development_secrets_volume:
     driver: local
     driver_opts:
@@ -423,6 +462,7 @@ volumes:
       device: $DEVELOPMENT_NEO4J_DATA_PATH/logs/
       o: bind
 
+# Logging configuration
 
 x-logging: &default-logging
   driver: "json-file"
@@ -430,6 +470,8 @@ x-logging: &default-logging
     max-size: "1m"
     max-file: "1"
     tag: "{{.Name}}/{{.ID}}"  
+
+# Common services configuration
 
 x-common_phpfpm_apache: &common_phpfpm_apache
   image: shinsenter/phpfpm-apache:php8
@@ -477,6 +519,7 @@ x-common_neo4j: &common_neo4j
         cpus: '1.0'
         memory: 2G
 
+# Special configurations
 
 configs:               
   preferences.json:
@@ -497,7 +540,7 @@ configs:
             "Name": "Production PostgreSQL",
             "Group": "Servers",
             "Host": "production_postgres",
-            "Port": 5432,
+            "Port": $PRODUCTION_POSTGRES_CONTAINER_TCP_PORT,
             "MaintenanceDB": "postgres",
             "Username": "production_user",
             "SSLMode": "prefer"
@@ -506,7 +549,7 @@ configs:
             "Name": "Development PostgreSQL",
             "Group": "Servers",
             "Host": "development_postgres",
-            "Port": 5432,
+            "Port": $DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT,
             "MaintenanceDB": "postgres",
             "Username": "development_user",
             "SSLMode": "prefer"
@@ -514,12 +557,15 @@ configs:
         }
       }
       
+
 services:
 # Core Services
 
   # Core Portainer Service
-  # Accessible at: http://localhost:9000/
-  # Healthcheck status: not sure how to healthcheck Portainer because it lacks bash and shell. http://core_portainer:9000/api/system/status would be the best
+  # Host Accessible at: http://localhost:$CORE_PORTAINER_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$CORE_PORTAINER_CONTAINER_HTTP_PORT
+  # Healthcheck status: Not sure how to healthcheck Portainer because it lacks bash and shell. http://core_portainer:$CORE_PORTAINER_HOST_HTTP_PORT/api/system/status would be the best
+  
   core_portainer:
     container_name: core_portainer
     image: portainer/portainer-ce:2.21.4
@@ -532,7 +578,7 @@ services:
     env_file:
       - $CORE_PORTAINER_ENVIRONMENT_FILE
     ports:
-      - "9000:9000"
+      - "$CORE_PORTAINER_HOST_HTTP_PORT:$CORE_PORTAINER_CONTAINER_HTTP_PORT"
     deploy:
       resources:
         limits:
@@ -550,8 +596,10 @@ services:
 
 
   # Core SearxNG Service
-  # Accessible at: http://localhost:8080
+  ## Host Accessible at: http://localhost:$CORE_SEARXNG_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$CORE_SEARXNG_CONTAINER_HTTP_PORT
   # Healthcheck status: working
+
   core_searxng:
     container_name: core_searxng
     image: searxng/searxng:2024.12.16-65c970bdf
@@ -565,9 +613,9 @@ services:
     env_file:
       - $CORE_SEARXNG_ENVIRONMENT_FILE     
     ports:
-      - "8084:8080" 
+      - "$CORE_SEARXNG_HOST_HTTP_PORT:$CORE_SEARXNG_CONTAINER_HTTP_PORT" 
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://core_searxng:8080/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://core_searxng:$CORE_SEARXNG_CONTAINER_HTTP_PORT/"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -630,8 +678,10 @@ services:
 
 
   # Core PGAdmin Service
-  # Accessible at: http://localhost:8082
+  # Host Accessible at: http://localhost:$CORE_PGADMIN_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$CORE_PGADMIN_CONTAINER_HTTP_PORT
   # Healthcheck status: working
+
   core_pgadmin:
     container_name: core_pgadmin
     image: dpage/pgadmin4:8.14.0
@@ -644,18 +694,14 @@ services:
     env_file:
       - $CORE_PGADMIN_ENVIRONMENT_FILE
     ports:
-      - "8082:80"  
+      - "$CORE_PGADMIN_HOST_HTTP_PORT:$CORE_PGADMIN_CONTAINER_HTTP_PORT"  
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://core_pgadmin:80/"]
+      test: ["CMD", "curl", "-f", "http://core_pgadmin:$CORE_PGADMIN_CONTAINER_HTTP_PORT/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     depends_on:
-      production_mariadb:
-        condition: service_healthy
-      development_mariadb:
-        condition: service_healthy
       production_postgres:
         condition: service_healthy
       development_postgres:
@@ -681,9 +727,12 @@ services:
       - production_db_network
       - development_db_network    
 
+
   # Core PhpMyAdmin Service
-  # Accessible at: http://localhost:8083
+  # Host Accessible at: http://localhost:$CORE_PHPMYADMIN_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$CORE_PHPMYADMIN_CONTAINER_HTTP_PORT
   # Healthcheck status: working
+
   core_phpmyadmin:
     container_name: core_phpmyadmin
     image: phpmyadmin/phpmyadmin:5.2.1
@@ -696,9 +745,9 @@ services:
     env_file:
       - $CORE_PHPMYADMIN_ENVIRONMENT_FILE
     ports:
-      - "8083:80"  
+      - "$CORE_PHPMYADMIN_HOST_HTTP_PORT:$CORE_PHPMYADMIN_CONTAINER_HTTP_PORT"  
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://core_phpmyadmin:80/"]
+      test: ["CMD", "curl", "-f", "http://core_phpmyadmin:$CORE_PHPMYADMIN_CONTAINER_HTTP_PORT/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -725,9 +774,12 @@ services:
       - production_db_network
       - development_db_network
 
+
   # Core Ollama Service
-  # Accessible at: http://localhost:11434
+  # Host Accessible at: http://localhost:$CORE_OLLAMA_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$CORE_OLLAMA_CONTAINER_HTTP_PORT
   # Healthcheck status: working
+
   core_ollama:
     container_name: core_ollama
     image: ollama/ollama:0.5.1    
@@ -740,9 +792,9 @@ services:
     env_file:
       - $CORE_OLLAMA_ENVIRONMENT_FILE
     ports:
-      - "11434:11434"      
+      - "$CORE_OLLAMA_HOST_HTTP_PORT:$CORE_OLLAMA_CONTAINER_HTTP_PORT"      
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://core_ollama:11434/api/version || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://core_ollama:$CORE_OLLAMA_CONTAINER_HTTP_PORT/api/version || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -752,7 +804,7 @@ services:
       -c '
       # Define all functions
       check_server() {
-        curl -s http://core_ollama:11434/api/version >/dev/null 2>&1
+        curl -s http://core_ollama:$CORE_OLLAMA_CONTAINER_HTTP_PORT/api/version >/dev/null 2>&1
       }
       
       wait_for_server() {
@@ -884,24 +936,27 @@ services:
       - production_app_network
       - development_app_network
 
+
   # Core OpenWebUI Service
-  # Accessible at: http://localhost:11435
+  # Host Accessible at: http://localhost:$CORE_OPENWEBUI_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$CORE_OPENWEBUI_HOST_HTTP_PORT
   # Healthcheck status: working
+
   core_openwebui:
     container_name: core_openwebui
     image: ghcr.io/open-webui/open-webui:git-1dfb479
     labels:
       - "local.service.name=Core - LLM Web UI: OpenWebUI"
-      - "local.service.description=Core OpenWebUI web ui for chatting with LLMs. This service must be able to communitcate with the Ollama inference server via port 11434. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.description=Core OpenWebUI web ui for chatting with LLMs. This service must be able to communitcate with the Ollama inference server via port $CORE_OLLAMA_CONTAINER_HTTP_PORT. Certain directories for this service are made available to the host machine for the purposes of data persistence."
       - "local.service.source.url=https://github.com/open-webui/open-webui"
       - "portainer.agent.stack=true"
     restart: unless-stopped
     env_file:
       - $CORE_OPENWEBUI_ENVIRONMENT_FILE
     ports:
-      - "11435:8080"
+      - "$CORE_OPENWEBUI_HOST_HTTP_PORT:$CORE_OPENWEBUI_CONTAINER_HTTP_PORT"
     healthcheck:  
-      test: ["CMD-SHELL", "curl -f http://core_openwebui:8080/auth || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://core_openwebui:$CORE_OPENWEBUI_CONTAINER_HTTP_PORT/auth || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -924,9 +979,12 @@ services:
 
 
 # Production Services
+
   # Production PHP-fpm Apache2
-  # Accessible at: http://localhost:8080
+  # Host Accessible at: http://localhost:$PRODUCTION_PHPFPM_APACHE_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT
   # Healthcheck status: working
+
   production_phpfpm_apache:
     container_name: production_phpfpm_apache  
     labels:
@@ -938,11 +996,11 @@ services:
     env_file:
       - $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE
     ports:
-      - "8080:80"
-      - "8443:443"
-      - "8443:443/udp"
+      - "$PRODUCTION_PHPFPM_APACHE_HOST_HTTP_PORT:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT"
+      - "$PRODUCTION_PHPFPM_APACHE_HOST_HTTPS_PORT:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTPS_PORT"
+      - "$PRODUCTION_PHPFPM_APACHE_HOST_HTTPS_PORT:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT/udp"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://production_phpfpm_apache:80/"]
+      test: ["CMD", "curl", "-f", "http://production_phpfpm_apache:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -959,9 +1017,12 @@ services:
       - core_monitoring_network
       - production_app_network      
 
+
   # Production Postgres
-  # Accessible at: http://localhost:5432
+  # Host Accessible at: http://localhost:$PRODUCTION_POSTGRES_HOST_TCP_PORT
+  # Docker Accessible at: http://localhost:$PRODUCTION_POSTGRES_CONTAINER_TCP_PORT
   # Healthcheck status: working
+
   production_postgres:
     container_name: production_postgres
     labels:
@@ -973,7 +1034,7 @@ services:
     env_file:
       - $PRODUCTION_POSTGRES_ENVIRONMENT_FILE
     ports:
-      - "5432:5432"
+      - "$PRODUCTION_POSTGRES_HOST_TCP_PORT:$PRODUCTION_POSTGRES_CONTAINER_TCP_PORT"
     logging:
       <<: *default-logging
       options:
@@ -985,9 +1046,12 @@ services:
       - production_app_network
       - production_db_network
 
+
   # Production MariaDB
-  # Accessible at: http://localhost:3306
+  # Host Accessible at: http://localhost:$PRODUCTION_MARIADB_HOST_TCP_PORT
+  # Docker Accessible at: http://localhost:$PRODUCTION_MARIADB_CONTAINER_TCP_PORT
   # Healthcheck status: working
+
   production_mariadb:
     container_name: production_mariadb    
     labels:
@@ -999,7 +1063,7 @@ services:
     env_file:
       - $PRODUCTION_MARIADB_ENVIRONMENT_FILE
     ports:
-      - "3306:3306"
+      - "$PRODUCTION_MARIADB_HOST_TCP_PORT:$PRODUCTION_MARIADB_CONTAINER_TCP_PORT"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "production_mariadb"]
       interval: 30s
@@ -1017,9 +1081,12 @@ services:
       - production_app_network
       - production_db_network
 
+
   # Production Neo4j
-  # Accessible at: http://localhost:7474
+  # Host Accessible at: http://localhost:$PRODUCTION_NEO4J_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$PRODUCTION_NEO4J_CONTAINER_HTTP_PORT
   # Healthcheck status: working
+
   production_neo4j:
     container_name: production_neo4j    
     labels:
@@ -1031,10 +1098,10 @@ services:
     env_file:
       - $PRODUCTION_NEO4J_ENVIRONMENT_FILE
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "$PRODUCTION_NEO4J_HOST_HTTP_PORT:$PRODUCTION_NEO4J_CONTAINER_HTTP_PORT"
+      - "$PRODUCTION_NEO4J_HOST_BOLT_PORT:$PRODUCTION_NEO4J_CONTAINER_BOLT_PORT"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://production_neo4j:7474/browser/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://production_neo4j:$PRODUCTION_NEO4J_CONTAINER_HTTP_PORT/browser/"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -1051,10 +1118,14 @@ services:
       - production_app_network
       - production_db_network
 
+
 # Development Services
+
   # Development PHP-fpm Apache2
-  # Accessible at: http://localhost:8081
+  # Host Accessible at: http://localhost:$DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT
   # Healthcheck status: working
+
   development_phpfpm_apache:
     container_name: development_phpfpm_apache  
     labels:
@@ -1066,11 +1137,11 @@ services:
     env_file:
       - $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE
     ports:
-      - "8081:80"
-      - "8444:443"
-      - "8444:443/udp"
+      - "$DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT"
+      - "$DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT"
+      - "$DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT/udp"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://development_phpfpm_apache:80/"]
+      test: ["CMD", "curl", "-f", "http://development_phpfpm_apache:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1087,9 +1158,12 @@ services:
       - core_monitoring_network
       - development_app_network
 
+
   # Development Postgres
-  # Accessible at: http://localhost:5433
+  # Host Accessible at: http://localhost:$DEVELOPMENT_POSTGRES_HOST_TCP_PORT
+  # Docker Accessible at: http://localhost:$DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT
   # Healthcheck status: working
+
   development_postgres:
     container_name: development_postgres
     labels:
@@ -1101,7 +1175,7 @@ services:
     env_file:
       - $DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE
     ports:
-      - "5433:5432"
+      - "$DEVELOPMENT_POSTGRES_HOST_TCP_PORT:$DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT"
     logging:
       <<: *default-logging
       options:
@@ -1113,9 +1187,12 @@ services:
       - development_app_network
       - development_db_network
 
+
   # Development MariaDB
-  # Accessible at: http://localhost:3307
+  # Host Accessible at: http://localhost:$DEVELOPMENT_MARIADB_HOST_TCP_PORT
+  # Docker Accessible at: http://localhost:$DEVELOPMENT_MARIADB_CONTAINER_TCP_PORT
   # Healthcheck status: working
+
   development_mariadb:
     container_name: development_mariadb    
     labels:
@@ -1127,7 +1204,7 @@ services:
     env_file:
       - $DEVELOPMENT_MARIADB_ENVIRONMENT_FILE
     ports:
-      - "3307:3306"
+      - "$DEVELOPMENT_MARIADB_HOST_TCP_PORT:$DEVELOPMENT_MARIADB_CONTAINER_TCP_PORT"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "development_mariadb"]
       interval: 30s
@@ -1145,9 +1222,12 @@ services:
       - development_app_network
       - development_db_network
 
+
   # Development Neo4j
-  # Accessible at: http://localhost:7475
+  # Host Accessible at: http://localhost:$DEVELOPMENT_NEO4J_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT
   # Healthcheck status: working
+
   development_neo4j:
     container_name: development_neo4j    
     labels:
@@ -1159,10 +1239,10 @@ services:
     env_file:
       - $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE
     ports:
-      - "7475:7474"
-      - "7688:7687"
+      - "$DEVELOPMENT_NEO4J_HOST_HTTP_PORT:$DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT"
+      - "$DEVELOPMENT_NEO4J_HOST_BOLT_PORT:$DEVELOPMENT_NEO4J_CONTAINER_BOLT_PORT"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://development_neo4j:7474/browser/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://development_neo4j:$DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT/browser/"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -1181,31 +1261,53 @@ services:
 
 networks:
 # Core Networks
+
   # Core Monitoring Network is used to monitor all of our services/docker containers ( Portainer and all other docker services )
+  
   core_monitoring_network:
     driver: bridge
+
+
   # Core Remote Access Network is used for our remote access related services/docker containers ( In future updates Zrok, Caddy, Traefik )
+  
   core_remote_access_network:
     driver: bridge
+  
+  
   # Core AI Network is used for our AI related services/docker containers ( SearxNG, Ollama, OpenWebUI )
+ 
   core_ai_network:
     driver: bridge
 
+
 # Production Networks
+
   # Production App Network is used for our web application related services/docker containers ( PHP Apache2, Postgres, MariaDB, Neo4j, SearxNG, Ollama )
+ 
   production_app_network:
     driver: bridge
+  
+  
   # Production DB Network is used for our database related services/docker containers ( Postgres, MariaDB, Neo4j, PGAdmin, PHPMyAdmin )
+  
   production_db_network:
     driver: bridge
 
+
 # Development Networks
+
   # Development App Network is used for our web application related services/docker containers ( PHP Apache2, Postgres, MariaDB, Neo4j, SearxNG, Ollama )
+  
   development_app_network:
     driver: bridge
+  
+
   # Development DB Network is used for our database related services/docker containers ( Postgres, MariaDB, Neo4j, PGAdmin, PHPMyAdmin )
+  
   development_db_network:
     driver: bridge      
+
+
 EOF
 
   log "Docker configurations created successfully."
