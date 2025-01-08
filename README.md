@@ -141,7 +141,8 @@ docker-compose up -d --build
 ### Core Services
 1. **Portainer**
    - Docker management UI
-   - Access: http://localhost:9000
+   - Access: 
+     - HTTP: http://localhost:9000
    - Secrets Environment Variables File: ~/.docker/core/secrets/.portainer.env
    - Data Volume: ~/.docker/core/data/portainer
    - Project Page: https://github.com/portainer/portainer
