@@ -102,11 +102,11 @@ WOMP, WOMP, big dick GPU purchases were not on your bingo card this year. The go
 
 The following modification needs to be done with the generated (`docker-compose.yml`) file after you've run the script.
 
-You'll want to find the services section of the (`docker-compose.yml`) file and look for where the core_ollama service is defined.
+You'll want to find the (`services:`) section of the (`docker-compose.yml`) file and look for where the (`core_ollama`) service is defined.
 
 You can perform this quickly by searching for (`container_name: core_ollama`)
 
-Scroll down to the deploy section of the core_ollama service. That should will look like this:
+Scroll down to the (`deploy:`) section of the (`core_ollama`) service. That should will look like this:
 
 ```yaml
     deploy:
@@ -120,7 +120,7 @@ Scroll down to the deploy section of the core_ollama service. That should will l
           memory: 64G
 ```
 
-Remove the (`reservations:`) section from the `deploy:` section. Your deploy should now look like this:
+Remove the (`reservations:`) section from the (`deploy:`) section. Your deploy should now look like this:
 
 ```yaml
     deploy:
@@ -134,6 +134,63 @@ Then save the file and when you next bring the container up it should run with C
 ```bash
 docker-compose up -d --build
 ```
+
+## For Apple Silicon People
+
+If you're using Apple Silicon then Ollama running in a Docker [cannot access your GPU](https://chariotsolutions.com/blog/post/apple-silicon-gpus-docker-and-ollama-pick-two/). You're relegated to running Ollama natively in order for Ollama to have access to your GPU. In this case in order to use this stack with your native Ollama you'll need to do the following:
+
+
+1. Run the script to generate the (`docker-compose.yml`) file. 
+
+2. Remove the (`core_ollama`) section of the (`docker-compose.yml`) file that was generated. Once you've removed the (`core_ollama`) section of the (`docker-compose.yml`) file, save the file.
+
+Because our (`core_openwebui`) service running OpenWebUI is expecting the Ollama server address to be (`http://core_ollama:11434`), it won't automatically work out of the box anymore. 
+
+The following changes would need to be made to so that (`core_openwebui`) will work with your native Ollama:
+
+3. Add (`extra_hosts`) entry to the (`core_openwebui`) service definition that specifies (`host.docker.internal:host-gateway`). This will allow the (`core_openwebui`) service to communicate with the host machine.
+
+In the (`docker-compose.yml`) file, add the following to the (`core_openwebui`) service definition.
+
+```yaml
+extra_hosts:
+      - "host.docker.internal:host-gateway"
+```
+
+You may want to also that (`extra_hosts`) entry to the sections in the (`docker-compose.yml`) of any other services that need to communicate with your native Ollama. Save your changes to the (`docker-compose.yml`) file.
+
+4. Now we need to update the (`~/.docker/core/secrets/.openwebui.env`) file that the script generated. The edits we're making will be to change the (`OLLAMA_BASE_URLS`) and (`RAG_OLLAMA_BASE_URL`) variables so that the (`core_openwebui`) service knows what address to use for communicating with your native Ollama.
+
+Open the (`~/.docker/core/secrets/.openwebui.env`) file and make the following changes for (`OLLAMA_BASE_URLS`):
+
+```bash
+OLLAMA_BASE_URLS=http://core_ollama:11434 
+```
+
+needs to be changed to
+
+```bash
+OLLAMA_BASE_URLS=http://host.docker.internal:11434
+```
+
+Next we need to change the (`RAG_OLLAMA_BASE_URL`)
+
+```bash
+RAG_OLLAMA_BASE_URL=http://core_ollama:11434
+```
+
+needs to be changed to
+
+
+```bash
+RAG_OLLAMA_BASE_URL=http://host.docker.internal:11434
+```
+
+Once you've made these changes to the (`~/.docker/core/secrets/.openwebui.env`) file, save the file.
+
+Now you should be able to run the stack with your native Ollama. Simply (`docker-compose up -d --build`).
+
+If you for any reason run the script again in the future, you'll need to make the same changes to the (`docker-compose.yml`) file and the (`~/.docker/core/secrets/.openwebui.env`) file again.
 
 
 ## Services Overview
