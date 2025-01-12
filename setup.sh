@@ -58,6 +58,16 @@ CORE_OPENWEBUI_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.openwebui.env"
 CORE_OPENWEBUI_HOST_HTTP_PORT=11435
 CORE_OPENWEBUI_CONTAINER_HTTP_PORT=8080
 
+CORE_KOKORO_TTS_DATA_PATH="$CORE_DATA_PATH/kokoro_tts"
+CORE_KOKORO_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.kokoro_tts.env"
+CORE_KOKORO_TTS_HOST_HTTP_PORT=8085
+CORE_KOKORO_TTS_CONTAINER_HTTP_PORT=8880
+
+CORE_KOKORO_WEBUI_DATA_PATH="$CORE_DATA_PATH/kokoro_webui"
+CORE_KOKORO_WEBUI_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.kokoro_webui.env"
+CORE_KOKORO_WEBUI_HOST_HTTP_PORT=7860
+CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT=7860
+
 # Define production service data path and environment file variables
 PRODUCTION_PHPFPM_APACHE_DATA_PATH="$PRODUCTION_DATA_PATH/phpfpm_apache"
 PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.phpfpm_apache.env" 
@@ -145,8 +155,9 @@ create_project_structure() {
   sudo -u $USER mkdir -p $BASE_PATH/{core,production,development}/{data,secrets} || error "Failed to create base directories."
 
   # Create core service directories
-  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,searxng,pgadmin,phpmyadmin,ollama,openwebui} || error "Failed to create core service directories."
+  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,searxng,pgadmin,phpmyadmin,ollama,openwebui,kokoro_tts,kokoro_webui} || error "Failed to create core service directories."
   sudo -u $USER mkdir -p $CORE_PGADMIN_DATA_PATH/storage_pgadmin || error "Failed to create core PGAdmin directories."
+  sudo -u $USER mkdir -p $CORE_KOKORO_TTS_DATA_PATH/{data_src,data_models} || error "Failed to create core Kokoro TTS directories."
 
   # Create production service directories
   sudo -u $USER mkdir -p $PRODUCTION_DATA_PATH/{phpfpm_apache,postgres,mariadb,neo4j} || error "Failed to create production service directories."
@@ -229,6 +240,17 @@ generate_secrets() {
     echo "SEARXNG_QUERY_URL=http://core_searxng:8080/search?q=<query>&format=json" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write SEARXNG_QUERY_URL to core .openwebui.env."
     echo "RAG_WEB_SEARCH_RESULT_COUNT=5" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_RESULT_COUNT to core .openwebui.env."
     echo "RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_CONCURRENT_REQUESTS to core .openwebui.env."
+  fi
+
+  if [ ! -f "$CORE_KOKORO_TTS_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to create core .kokoro_tts.env."
+    echo "PYTHONUNBUFFERED=1" > $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONUNBUFFERED to core .kokoro_tts.env."
+    echo "PYTHONPATH=/app:/app/Kokoro-82M" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONPATH to core .kokoro_tts.env."
+    echo "PATH=/home/appuser/.local/bin:\$PATH" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PATH to core .kokoro_tts.env."
+  fi
+
+  if [ ! -f "$CORE_KOKORO_WEBUI_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_KOKORO_WEBUI_ENVIRONMENT_FILE || error "Failed to create core .kokoro_webui.env."
   fi
 
   # Production secrets
@@ -339,8 +361,7 @@ volumes:
     driver_opts:
       type: none
       device: $CORE_PGADMIN_DATA_PATH/storage_pgadmin/
-      o: bind
-            
+      o: bind            
   host_core_phpmyadmin_storage_volume:
     driver: local
     driver_opts:
@@ -358,7 +379,25 @@ volumes:
     driver_opts:
       type: none
       device: $CORE_OPENWEBUI_DATA_PATH/
-      o: bind           
+      o: bind      
+  host_core_kokoro_tts_data_src_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: $CORE_KOKORO_TTS_DATA_PATH/data_src/
+      o: bind    
+  host_core_kokoro_tts_data_models_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: $CORE_KOKORO_TTS_DATA_PATH/data_models/
+      o: bind 
+  host_core_kokoro_webui_storage_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: $CORE_KOKORO_WEBUI_DATA_PATH/
+      o: bind
 
 # Production volumes
 
@@ -977,6 +1016,112 @@ services:
       - core_monitoring_network
       - core_ai_network
 
+  # Core Kokoro TTS Service
+  # Host Accessible at: http://localhost:$CORE_KOKORO_TTS_HOST_HTTP_PORT
+  # Docker Accessible at: http://localhost:$CORE_KOKORO_TTS_HOST_HTTP_PORT
+  # Healthcheck status: working
+
+  core_kokoro_tts:
+    container_name: core_kokoro_tts
+    image: ghcr.io/remsky/kokoro-fastapi:latest
+    labels:
+      - "local.service.name=Core - LLM Web UI: Kokoro TTS"
+      - "local.service.description=Core Kokoro TTS fast api for text-to-speech. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.source.url=https://github.com/remsky/Kokoro-FastAPI"
+      - "portainer.agent.stack=true"
+    restart: unless-stopped
+    env_file:
+      - $CORE_KOKORO_TTS_ENVIRONMENT_FILE
+    ports:
+      - "$CORE_KOKORO_TTS_HOST_HTTP_PORT:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT"
+    healthcheck:  
+      test: ["CMD", "curl", "-f", "http://core_kokoro_tts:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT/v1/audio/voices"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s      
+    entrypoint: /bin/sh
+    command: |
+      -c '
+      cd /app
+      
+      echo "Installing dependencies..."
+      apt-get update && apt-get install -y --no-install-recommends python3-pip python3-dev espeak-ng curl unzip git git-lfs libsndfile1
+      apt-get clean
+      rm -rf /var/lib/apt/lists/
+      git lfs install
+      
+      echo "Creating appuser..."
+      useradd -m -u 1000 appuser || true
+      
+      echo "Setting owner of app directory to appuser..."
+      chown -R appuser:appuser /app
+      
+      echo "Checking and updating repositories..."  
+
+      # Handle Kokoro-82M repository
+      if [ -d "/app/Kokoro-82M" ]; then
+        echo "Removing any existing index.lock file..."
+        rm -f /app/Kokoro-82M/.git/index.lock      
+        echo "Updating Kokoro-82M repository..."
+        cd /app/Kokoro-82M
+        if [ -d ".git" ]; then
+          git config --global --add safe.directory /app/Kokoro-82M
+          git fetch origin
+          git reset --hard origin/main || true
+        fi
+      else
+        echo "Removing any existing index.lock file..."
+        rm -f /app/Kokoro-82M/.git/index.lock           
+        echo "Cloning Kokoro-82M repository..."
+        git clone https://huggingface.co/hexgrad/Kokoro-82M
+      fi
+      
+      # Handle Kokoro-FastAPI repository
+      if [ ! -d "/app/.github" ]; then
+        echo "Downloading and extracting Kokoro-FastAPI..."
+        cd /app
+        curl -L https://github.com/remsky/Kokoro-FastAPI/archive/refs/heads/master.zip -o kokoro.zip && \
+        unzip -o kokoro.zip && \
+        cp -rf Kokoro-FastAPI-master/* . && \
+        cp -rf Kokoro-FastAPI-master/.[!.]* . 2>/dev/null || true && \
+        rm -rf Kokoro-FastAPI-master kokoro.zip
+      fi
+      
+      echo "Installing requirements..."
+      cd /app
+      su appuser -c "python3 -m pip install --upgrade pip"
+      su appuser -c "pip3 cache purge"
+      su appuser -c "pip3 install --no-cache-dir torch==2.5.1 --extra-index-url https://download.pytorch.org/whl/cu121"
+      if [ -f "requirements.txt" ]; then
+        su appuser -c "pip3 install --no-cache-dir -r requirements.txt"
+      fi
+      su appuser -c "pip3 install loguru pydantic_settings scipy soundfile munch transformers phonemizer"
+      
+      echo "Starting server..."
+      cd /app
+      su appuser -c "uvicorn api.src.main:app --host 0.0.0.0 --port 8880 --log-level debug"'   
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+        limits:
+          cpus: '0.50'
+          memory: 8192M
+    logging:
+      <<: *default-logging
+      options:
+        tag: "core-tts-server/{{.Name}}"  
+    volumes:
+      - host_core_kokoro_tts_data_src_volume:/app/api/src
+      - host_core_kokoro_tts_data_models_volume:/app/Kokoro-82M        
+    networks:
+      - core_monitoring_network      
+      - core_ai_network
+      - production_app_network
+      - development_app_network
 
 # Production Services
 
