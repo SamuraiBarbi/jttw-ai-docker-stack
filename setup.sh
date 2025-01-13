@@ -1429,7 +1429,7 @@ networks:
     driver: bridge
   
   
-  # Core AI Network is used for our AI related services/docker containers ( SearxNG, Ollama, OpenWebUI )
+  # Core AI Network is used for our AI related services/docker containers ( SearxNG, Ollama, OpenWebUI, Kokoro TTS )
  
   core_ai_network:
     driver: bridge
@@ -1437,7 +1437,7 @@ networks:
 
 # Production Networks
 
-  # Production App Network is used for our web application related services/docker containers ( PHP Apache2, Postgres, MariaDB, Neo4j, SearxNG, Ollama )
+  # Production App Network is used for our web application related services/docker containers ( PHP Apache2, Postgres, MariaDB, Neo4j, SearxNG, Ollama, Kokoro TTS )
  
   production_app_network:
     driver: bridge
@@ -1451,7 +1451,7 @@ networks:
 
 # Development Networks
 
-  # Development App Network is used for our web application related services/docker containers ( PHP Apache2, Postgres, MariaDB, Neo4j, SearxNG, Ollama )
+  # Development App Network is used for our web application related services/docker containers ( PHP Apache2, Postgres, MariaDB, Neo4j, SearxNG, Ollama, Kokoro TTS )
   
   development_app_network:
     driver: bridge
