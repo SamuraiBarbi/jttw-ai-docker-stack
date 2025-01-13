@@ -240,6 +240,13 @@ generate_secrets() {
     echo "SEARXNG_QUERY_URL=http://core_searxng:8080/search?q=<query>&format=json" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write SEARXNG_QUERY_URL to core .openwebui.env."
     echo "RAG_WEB_SEARCH_RESULT_COUNT=5" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_RESULT_COUNT to core .openwebui.env."
     echo "RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_CONCURRENT_REQUESTS to core .openwebui.env."
+    echo "AUDIO_TTS_ENGINE=openai" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_ENGINE to core .openwebui.env."
+    echo "AUDIO_TTS_OPENAI_API_BASE_URL=http://core_kokoro_tts:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT/v1" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_OPENAI_API_BASE_URL to core .openwebui.env."
+    echo "AUDIO_TTS_OPENAI_API_KEY=key-to-success" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_API_KEY to core .openwebui.env."
+    echo "AUDIO_TTS_MODEL=kokoro" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_MODEL to core .openwebui.env."
+    echo "AUDIO_TTS_VOICE=bf_emma" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_VOICE to core .openwebui.env."
+    echo "AUDIO_TTS_SPLIT_ON=punctuation" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_SPLIT_ON to core .openwebui.env."
+    
   fi
 
   if [ ! -f "$CORE_KOKORO_TTS_ENVIRONMENT_FILE" ]; then
@@ -1011,7 +1018,9 @@ services:
     logging:
       <<: *default-logging
       options:
-        tag: "core-llm-ui/{{.Name}}"  
+        tag: "core-llm-ui/{{.Name}}" 
+    volumes:
+      - host_core_openwebui_storage_volume:/app/backend/data         
     networks:
       - core_monitoring_network
       - core_ai_network
@@ -1059,21 +1068,22 @@ services:
       
       echo "Checking and updating repositories..."  
 
-      # Handle Kokoro-82M repository
-      if [ -d "/app/Kokoro-82M" ]; then
+      # Handle Kokoro-82M repository   
+
+      if [ -d "/app/Kokoro-82M/.git" ]; then
         echo "Removing any existing index.lock file..."
-        rm -f /app/Kokoro-82M/.git/index.lock      
+        rm -f /app/Kokoro-82M/.git/index.lock         
         echo "Updating Kokoro-82M repository..."
+        
         cd /app/Kokoro-82M
         if [ -d ".git" ]; then
           git config --global --add safe.directory /app/Kokoro-82M
           git fetch origin
           git reset --hard origin/main || true
         fi
-      else
-        echo "Removing any existing index.lock file..."
-        rm -f /app/Kokoro-82M/.git/index.lock           
+      else          
         echo "Cloning Kokoro-82M repository..."
+        cd /app
         git clone https://huggingface.co/hexgrad/Kokoro-82M
       fi
       
@@ -1100,7 +1110,7 @@ services:
       
       echo "Starting server..."
       cd /app
-      su appuser -c "uvicorn api.src.main:app --host 0.0.0.0 --port 8880 --log-level debug"'   
+      su -s /bin/bash appuser -c "uvicorn api.src.main:app --host 0.0.0.0 --port $CORE_KOKORO_TTS_CONTAINER_HTTP_PORT --log-level debug"'
     deploy:
       resources:
         reservations:
@@ -1116,7 +1126,7 @@ services:
         tag: "core-tts-server/{{.Name}}"  
     volumes:
       - host_core_kokoro_tts_data_src_volume:/app/api/src
-      - host_core_kokoro_tts_data_models_volume:/app/Kokoro-82M        
+      - host_core_kokoro_tts_data_models_volume:/app/Kokoro-82M           
     networks:
       - core_monitoring_network      
       - core_ai_network
