@@ -62,10 +62,7 @@ CORE_KOKORO_TTS_DATA_PATH="$CORE_DATA_PATH/kokoro_tts"
 CORE_KOKORO_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.kokoro_tts.env"
 CORE_KOKORO_TTS_HOST_HTTP_PORT=8085
 CORE_KOKORO_TTS_CONTAINER_HTTP_PORT=8880
-
-CORE_KOKORO_WEBUI_DATA_PATH="$CORE_DATA_PATH/kokoro_webui"
-CORE_KOKORO_WEBUI_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.kokoro_webui.env"
-CORE_KOKORO_WEBUI_HOST_HTTP_PORT=7860
+CORE_KOKORO_WEBUI_HOST_HTTP_PORT=8086
 CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT=7860
 
 # Define production service data path and environment file variables
@@ -155,9 +152,9 @@ create_project_structure() {
   sudo -u $USER mkdir -p $BASE_PATH/{core,production,development}/{data,secrets} || error "Failed to create base directories."
 
   # Create core service directories
-  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,searxng,pgadmin,phpmyadmin,ollama,openwebui,kokoro_tts,kokoro_webui} || error "Failed to create core service directories."
+  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,searxng,pgadmin,phpmyadmin,ollama,openwebui,kokoro_tts} || error "Failed to create core service directories."
   sudo -u $USER mkdir -p $CORE_PGADMIN_DATA_PATH/storage_pgadmin || error "Failed to create core PGAdmin directories."
-  sudo -u $USER mkdir -p $CORE_KOKORO_TTS_DATA_PATH/{data_src,data_models} || error "Failed to create core Kokoro TTS directories."
+  sudo -u $USER mkdir -p $CORE_KOKORO_TTS_DATA_PATH/{data_src,data_models,data_ui} || error "Failed to create core Kokoro TTS directories."
 
   # Create production service directories
   sudo -u $USER mkdir -p $PRODUCTION_DATA_PATH/{phpfpm_apache,postgres,mariadb,neo4j} || error "Failed to create production service directories."
@@ -254,10 +251,8 @@ generate_secrets() {
     echo "PYTHONUNBUFFERED=1" > $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONUNBUFFERED to core .kokoro_tts.env."
     echo "PYTHONPATH=/app:/app/Kokoro-82M" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONPATH to core .kokoro_tts.env."
     echo "PATH=/home/appuser/.local/bin:\$PATH" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PATH to core .kokoro_tts.env."
-  fi
-
-  if [ ! -f "$CORE_KOKORO_WEBUI_ENVIRONMENT_FILE" ]; then
-    sudo -u $USER touch $CORE_KOKORO_WEBUI_ENVIRONMENT_FILE || error "Failed to create core .kokoro_webui.env."
+    echo "GRADIO_WATCH=True" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write GRADIO_WATCH to core .kokoro_tts.env."
+    echo "PYTHONUNBUFFERED=1" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONUNBUFFERED to core .kokoro_tts.env."
   fi
 
   # Production secrets
@@ -399,12 +394,13 @@ volumes:
       type: none
       device: $CORE_KOKORO_TTS_DATA_PATH/data_models/
       o: bind 
-  host_core_kokoro_webui_storage_volume:
+  host_core_kokoro_tts_data_ui_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_KOKORO_WEBUI_DATA_PATH/
-      o: bind
+      device: $CORE_KOKORO_TTS_DATA_PATH/data_ui/
+      o: bind 
+
 
 # Production volumes
 
@@ -1027,6 +1023,7 @@ services:
 
   # Core Kokoro TTS Service
   # Host Accessible at: http://localhost:$CORE_KOKORO_TTS_HOST_HTTP_PORT
+  # Web UI Accessible at: http://localhost:$CORE_KOKORO_WEBUI_HOST_HTTP_PORT
   # Docker Accessible at: http://localhost:$CORE_KOKORO_TTS_HOST_HTTP_PORT
   # Healthcheck status: working
 
@@ -1043,8 +1040,9 @@ services:
       - $CORE_KOKORO_TTS_ENVIRONMENT_FILE
     ports:
       - "$CORE_KOKORO_TTS_HOST_HTTP_PORT:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT"
+      - "$CORE_KOKORO_WEBUI_HOST_HTTP_PORT:$CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT"
     healthcheck:  
-      test: ["CMD", "curl", "-f", "http://core_kokoro_tts:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT/v1/audio/voices"]
+      test: ["CMD", "curl", "-f", "http://core_kokoro_tts:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1091,26 +1089,28 @@ services:
       if [ ! -d "/app/.github" ]; then
         echo "Downloading and extracting Kokoro-FastAPI..."
         cd /app
-        curl -L https://github.com/remsky/Kokoro-FastAPI/archive/refs/heads/master.zip -o kokoro.zip && \
-        unzip -o kokoro.zip && \
-        cp -rf Kokoro-FastAPI-master/* . && \
-        cp -rf Kokoro-FastAPI-master/.[!.]* . 2>/dev/null || true && \
-        rm -rf Kokoro-FastAPI-master kokoro.zip
+        curl -L https://github.com/remsky/Kokoro-FastAPI/archive/refs/heads/master.zip -o kokoro.zip &&         unzip -o kokoro.zip &&         cp -rf Kokoro-FastAPI-master/* . &&         cp -rf Kokoro-FastAPI-master/.[!.]* . 2>/dev/null || true &&         rm -rf Kokoro-FastAPI-master kokoro.zip
       fi
       
       echo "Installing requirements..."
-      cd /app
       su appuser -c "python3 -m pip install --upgrade pip"
       su appuser -c "pip3 cache purge"
       su appuser -c "pip3 install --no-cache-dir torch==2.5.1 --extra-index-url https://download.pytorch.org/whl/cu121"
+      su appuser -c "pip3 install --no-cache-dir loguru"
+      
       if [ -f "requirements.txt" ]; then
         su appuser -c "pip3 install --no-cache-dir -r requirements.txt"
       fi
-      su appuser -c "pip3 install loguru pydantic_settings scipy soundfile munch transformers phonemizer"
+      su appuser -c "pip3 install --no-cache-dir pydantic_settings scipy soundfile munch transformers phonemizer"
       
-      echo "Starting server..."
+      echo "Updating API URL..."
+      sed -i "s|API_URL = \"http://kokoro-tts:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT\"|API_URL = \"http://core_kokoro_tts:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT\"|" /app/ui/lib/config.py
+      
+      echo "Starting api server and gradio ui..."
       cd /app
-      su -s /bin/bash appuser -c "uvicorn api.src.main:app --host 0.0.0.0 --port $CORE_KOKORO_TTS_CONTAINER_HTTP_PORT --log-level debug"'
+      (su -s /bin/bash appuser -c "uvicorn api.src.main:app --host 0.0.0.0 --port $CORE_KOKORO_TTS_CONTAINER_HTTP_PORT --log-level debug" &)
+      cd /app/ui
+      su appuser -c "python app.py"'
     deploy:
       resources:
         reservations:
@@ -1124,9 +1124,10 @@ services:
       <<: *default-logging
       options:
         tag: "core-tts-server/{{.Name}}"  
-    volumes:
+    volumes:      
       - host_core_kokoro_tts_data_src_volume:/app/api/src
       - host_core_kokoro_tts_data_models_volume:/app/Kokoro-82M           
+      - host_core_kokoro_tts_data_ui_volume:/app/ui
     networks:
       - core_monitoring_network      
       - core_ai_network
