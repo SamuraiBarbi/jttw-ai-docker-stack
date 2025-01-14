@@ -27,7 +27,17 @@ The script handles
      - [qwen2.5:14b](https://ollama.com/library/qwen2.5:14b) - For chat
      - [hhao/qwen2.5-coder-tools:32b](https://ollama.com/library/hhao/qwen2.5-coder-tools:32b) - For coding
      - [mxbai-embed-large](https://ollama.com/library/mxbai-embed-large) - For embedding/reading documents
-   - Initial voice models downloads and fast-api setup for Kokoro TTS docker upon docker up
+   - Initial [voice models](https://huggingface.co/hexgrad/Kokoro-82M/tree/main/voices) downloads and fast-api setup for Kokoro TTS docker upon docker up:
+     - [af](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_af.mp3)
+     - [af_bella](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_af_bella.mp3)
+     - [af_nicole](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_af_nicole.mp3)
+     - [af_sarah](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_af_sarah.mp3)
+     - [am_adam](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_am_adam.mp3)
+     - [am_michael](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_am_michael.mp3)
+     - [bf_emma](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_bf_emma.mp3)
+     - [bf_isabella](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_bf_isabella.mp3)
+     - [bm_george](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_bm_george.mp3)
+     - [bm_lewis](https://github.com/remsky/Kokoro-FastAPI/blob/master/examples/voice_samples/speech_bm_lewis.mp3)
    - Provides access to Kokoro TTS via API and Gradio UI
    - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
    - Set up and configuration of OpenWebUI with access to Ollama docker service for AI interactions
