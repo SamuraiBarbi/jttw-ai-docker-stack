@@ -28,6 +28,7 @@ The script handles
      - [hhao/qwen2.5-coder-tools:32b](https://ollama.com/library/hhao/qwen2.5-coder-tools:32b) - For coding
      - [mxbai-embed-large](https://ollama.com/library/mxbai-embed-large) - For embedding/reading documents
    - Initial voice models downloads and fast-api setup for Kokoro TTS docker upon docker up
+   - Provides access to Kokoro TTS via API and Gradio UI
    - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
    - Set up and configuration of OpenWebUI with access to Ollama docker service for AI interactions
    - Set up and configuration of OpenWebUI docker to allow LLM web searches using SearxNG
@@ -210,6 +211,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/portainer/portainer
    - Docker Image: [portainer/portainer-ce:2.21.4](https://hub.docker.com/layers/portainer/portainer-ce/2.21.4/images/sha256-a79ade2af4257a1a77e33fefdf06ec47606c0ce0dbff3146f6426c8a209908f4?context=explore)
    - Persistent data storage
+   - Supports Docker management via web ui on port 9000
    - Manages Docker containers and services
 
 2. **SearxNG**
@@ -221,6 +223,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/searxng/searxng
    - Docker Image: [searxng/searxng:2024.12.16-65c970bdf](https://hub.docker.com/layers/searxng/searxng/2024.12.16-65c970bdf/images/sha256-4a13ed45abe2546765d2def2b23292ae46646c50d647758895ccea629f668a9c)
    - Persistent data storage
+   - Supports fast near real-time privacy-respecting web searches on port 8084
    - Installs pre-configured with support for both HTML and JSON search formats
 
 3. **PGAdmin**
@@ -232,6 +235,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/pgadmin-org/pgadmin4
    - Docker Image: [dpage/pgadmin4:8.14.0](https://hub.docker.com/layers/dpage/pgadmin4/8.14.0/images/sha256-1053696a89c887a2a3ee6b24a7e2614cf68227d30ff8304e61da20bc71d4dd50)
    - Persistent data storage
+   - Manages both production and development Postgres instances on port 8082
    - Installs pre-configured with access to both production and development Postgres databases
 
 4. **PHPMyAdmin**
@@ -243,7 +247,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/phpmyadmin/phpmyadmin
    - Docker Image: [phpmyadmin/phpmyadmin:5.2.1](https://hub.docker.com/layers/phpmyadmin/phpmyadmin/5.2.1/images/sha256-67ba2550fd004399ab0b95b64021a88ea544011e566a9a1995180a3decb6410d)
    - Persistent data storage
-   - Manages both production and development MariaDB instances
+   - Manages both production and development MariaDB instances on port 8083
    - Installs pre-configured with access to production and development MariaDB databases
 
 5. **Ollama**
@@ -255,6 +259,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/ollama/ollama
    - Docker Image: [ollama/ollama:0.5.1](https://hub.docker.com/layers/ollama/ollama/0.5.1/images/sha256-bbe7b28a899f111df1de2ebd70de0f8c55746784038dd70d537c540df23f57c1)
    - Persistent data storage
+   - Supports LLMs for web applications on port 11434
    - Installs with support using multiple AI models including:
      - [mxbai-embed-large](https://ollama.com/library/mxbai-embed-large) for embedding/reading documents
      - [llama3.2:3b](https://ollama.com/library/llama3.2:3b) for chat
@@ -272,21 +277,23 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/open-webui/open-webui
    - Docker Image: [ghcr.io/open-webui/open-webui:git-1dfb479](https://github.com/open-webui/open-webui/pkgs/container/open-webui/331304257?tag=git-1dfb479)
    - Persistent data storage
-   - Integrates with Ollama for AI interactions
+   - Integrates with Ollama for AI interactions on port 11435
    - Installs pre-configured with websearch enabled using SearxNG
    - Installs pre-configured with embedding enabled using mxbai-embed-large embedding model
 
 7. **Kokoro TTS**
    - Text-to-speech service
    - Access: 
-     - HTTP: http://localhost:8085
+     - API HTTP: http://localhost:8085
+     - Gradio UI HTTP: http://localhost:8086
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.kokoro_tts.env
    - Data Volume: $HOME/.docker/core/data/kokoro_tts
    - Project Page: https://github.com/remsky/Kokoro-FastAPI
    - Docker Image: [remsky/kokoro-fastapi:latest](ghcr.io/remsky/kokoro-fastapi:latest)
    - Persistent data storage
-   - Supports fast near real-time text-to-speech generation via API
+   - Supports fast near real-time text-to-speech generation via API on port 8085
    - Installs pre-configured with voice models
+   - Supports Gradio UI for interactive generation of text-to-speech on port 8086
 
 
 ### Production Services
@@ -300,6 +307,8 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/shinsenter/php
    - Docker Image[shinsenter/phpfpm-apache:php8](https://hub.docker.com/layers/shinsenter/phpfpm-apache/php8/images/sha256-371fcee525c04dd95898bb2cf0590c8fa163402374d5141f75dcbbc6b3088e11)
    - Persistent data storage
+   - Serves web applications on port 8080
+   - Serves secure web applications on port 8443
    - Supports PHP applications
 
 2. **Postgres**
@@ -311,6 +320,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/postgres/postgres
    - Docker Image: [postgres:12.22](https://hub.docker.com/layers/library/postgres/12.22/images/sha256-25b2d01b1bb6c995ee5cd865019d030158309b7811ac5809060b6c69c4eaea2e)
    - Persistent data storage
+   - Supports databases for web applications on port 5432
    - Used for vector data
 
 3. **MariaDB**
@@ -322,6 +332,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/MariaDB/server
    - Docker Image: [mariadb:10.6](https://hub.docker.com/layers/library/mariadb/10.6/images/sha256-5e037317c5a20c7cde15ce4404e8f363ab39eddb3d72379eaa3a9db882efaf6d)
    - Persistent data storage
+   - Supports databases for web applications on port 3306
    - Used for traditional data
 
 4. **Neo4j**
@@ -334,6 +345,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/neo4j/neo4j
    - Docker Image: [neo4j:5.26.0-community](https://hub.docker.com/layers/library/neo4j/5.26.0-community/images/sha256-4c59f45618c46b3e189d9ec36242c51396a9180ea7c494a89769671a535771d3)
    - Persistent data storage
+   - Supports graph databases for web applications on port 7474
    - Used for knowledge graphs and AI memory augmentation
 
 ### Development Services
@@ -347,6 +359,8 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/shinsenter/php
    - Docker Image: [shinsenter/phpfpm-apache:php8](https://hub.docker.com/layers/shinsenter/phpfpm-apache/php8/images/sha256-371fcee525c04dd95898bb2cf0590c8fa163402374d5141f75dcbbc6b3088e11)
    - Persistent data storage
+   - Serves web applications on port 8081
+   - Serves secure web applications on port 8444
    - Separate instance for development
 
 2. **Postgres**
@@ -358,6 +372,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/postgres/postgres
    - Docker Image: [postgres:12.22](https://hub.docker.com/layers/library/postgres/12.22/images/sha256-25b2d01b1bb6c995ee5cd865019d030158309b7811ac5809060b6c69c4eaea2e)
    - Persistent data storage
+   - Supports databases for web applications on port 5433
    - Separate instance for development
    - Isolated from production data
 
@@ -370,6 +385,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/MariaDB/server
    - Docker Image: [mariadb:10.6](https://hub.docker.com/layers/library/mariadb/10.6/images/sha256-5e037317c5a20c7cde15ce4404e8f363ab39eddb3d72379eaa3a9db882efaf6d)
    - Persistent data storage
+   - Supports databases for web applications on port 3307
    - Separate instance for development
    - Isolated from production data
 
@@ -383,6 +399,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/neo4j/neo4j
    - Docker Image: [neo4j:5.26.0-community](https://hub.docker.com/layers/library/neo4j/5.26.0-community/images/sha256-4c59f45618c46b3e189d9ec36242c51396a9180ea7c494a89769671a535771d3)
    - Persistent data storage
+   - Supports graph databases for web applications on port 7475
    - Separate instance for development
    - Isolated from production data
 
