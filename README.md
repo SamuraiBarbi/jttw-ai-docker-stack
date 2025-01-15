@@ -38,6 +38,8 @@ The script handles
      - [bf_isabella](https://github.com/remsky/Kokoro-FastAPI/raw/refs/heads/master/examples/voice_samples/speech_bf_isabella.mp3)
      - [bm_george](https://github.com/remsky/Kokoro-FastAPI/raw/refs/heads/master/examples/voice_samples/speech_bm_george.mp3)
      - [bm_lewis](https://github.com/remsky/Kokoro-FastAPI/raw/refs/heads/master/examples/voice_samples/speech_bm_lewis.mp3)
+     - am_gurney
+     - af_irulan
    - Provides access to Kokoro TTS via API and Gradio UI
    - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
    - Set up and configuration of OpenWebUI with access to Ollama docker service for AI interactions
@@ -509,6 +511,8 @@ If you for any reason run the script again in the future, you'll need to make th
      - Guidance or an adjacent project
      - Text-to-speech and/or Speech-to-text dockers
      - An image generation docker using SD Forge, SwarmUI, or something similar which can be accessed via a web interface and has an API that can be utilized to generate images
+     - GPT-SoVITS for when TTS needs to sound more human-like. https://github.com/RVC-Boss/GPT-SoVITS
+     - Faster whisper for transripting audio to text
 
 ## Contributing
 
