@@ -6,6 +6,18 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+SERVICE_PORTAINER_VERSION="2.21.4"
+SERVICE_SEARXNG_VERSION="2024.12.16-65c970bdf"
+SERVICE_PGADMIN_VERSION="8.14.0"
+SERVICE_PHPMYADMIN_VERSION="5.2.1"
+SERVICE_OLLAMA_VERSION="0.5.1"
+SERVICE_OPENWEBUI_VERSION="git-1dfb479"
+SERVICE_KOKORO_TTS_VERSION="v0.0.5"
+SERVICE_PHPFPM_APACHE_VERSION="php8"
+SERVICE_POSTGRES_VERSION="12.22"
+SERVICE_MARIADB_VERSION="10.6"
+SERVICE_NEO4J_VERSION="5.26.0-community"
+
 HOST_USER_UID=$(id -u $USER)
 HOST_USER_GID=$(id -g $USER)
 WWW_DATA_USER_UID=$(id -u www-data)
@@ -58,12 +70,16 @@ CORE_OPENWEBUI_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.openwebui.env"
 CORE_OPENWEBUI_HOST_HTTP_PORT=11435
 CORE_OPENWEBUI_CONTAINER_HTTP_PORT=8080
 
+
 CORE_KOKORO_TTS_DATA_PATH="$CORE_DATA_PATH/kokoro_tts"
 CORE_KOKORO_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.kokoro_tts.env"
 CORE_KOKORO_TTS_HOST_HTTP_PORT=8085
 CORE_KOKORO_TTS_CONTAINER_HTTP_PORT=8880
 CORE_KOKORO_WEBUI_HOST_HTTP_PORT=8086
 CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT=7860
+
+
+
 
 # Define production service data path and environment file variables
 PRODUCTION_PHPFPM_APACHE_DATA_PATH="$PRODUCTION_DATA_PATH/phpfpm_apache"
@@ -516,7 +532,7 @@ x-logging: &default-logging
 # Common services configuration
 
 x-common_phpfpm_apache: &common_phpfpm_apache
-  image: shinsenter/phpfpm-apache:php8
+  image: shinsenter/phpfpm-apache:$SERVICE_PHPFPM_APACHE_VERSION
   restart: unless-stopped 
   deploy:
     resources:
@@ -525,7 +541,7 @@ x-common_phpfpm_apache: &common_phpfpm_apache
         memory: 512M
 
 x-common_postgres: &common_postgres
-  image: postgres:12.22
+  image: postgres:$SERVICE_POSTGRES_VERSION
   restart: unless-stopped
   deploy:
     resources:
@@ -540,7 +556,7 @@ x-common_postgres: &common_postgres
     start_period: 40s    
 
 x-common_mariadb: &common_mariadb        
-  image: mariadb:10.6
+  image: mariadb:$SERVICE_MARIADB_VERSION
   restart: unless-stopped
   deploy:
     resources:
@@ -549,8 +565,7 @@ x-common_mariadb: &common_mariadb
         memory: 1G
 
 x-common_neo4j: &common_neo4j
-  # image: neo4j:5.7.0-community
-  image: neo4j:5.26.0-community
+  image: neo4j:$SERVICE_NEO4J_VERSION
   restart: unless-stopped
   depends_on:
     core_ollama:
@@ -610,7 +625,7 @@ services:
   
   core_portainer:
     container_name: core_portainer
-    image: portainer/portainer-ce:2.21.4
+    image: portainer/portainer-ce:$SERVICE_PORTAINER_VERSION
     labels:
       - "local.service.name=Core - Docker Web UI: Portainer"
       - "local.service.description=Core Portainer provides a web-based UI for managing Docker containers."
@@ -644,7 +659,7 @@ services:
 
   core_searxng:
     container_name: core_searxng
-    image: searxng/searxng:2024.12.16-65c970bdf
+    image: searxng/searxng:$SERVICE_SEARXNG_VERSION
     restart: unless-stopped
     user: "${HOST_USER_UID}:${HOST_USER_GID}"
     labels:
@@ -726,7 +741,7 @@ services:
 
   core_pgadmin:
     container_name: core_pgadmin
-    image: dpage/pgadmin4:8.14.0
+    image: dpage/pgadmin4:$SERVICE_PGADMIN_VERSION
     restart: unless-stopped
     labels:
       - "local.service.name=CORE - DB Web UI: PGAdmin"
@@ -777,7 +792,7 @@ services:
 
   core_phpmyadmin:
     container_name: core_phpmyadmin
-    image: phpmyadmin/phpmyadmin:5.2.1
+    image: phpmyadmin/phpmyadmin:$SERVICE_PHPMYADMIN_VERSION
     restart: unless-stopped
     labels:
       - "local.service.name=CORE - DB Web UI: PHPMyAdmin"
@@ -824,7 +839,7 @@ services:
 
   core_ollama:
     container_name: core_ollama
-    image: ollama/ollama:0.5.1    
+    image: ollama/ollama:$SERVICE_OLLAMA_VERSION   
     restart: unless-stopped
     labels:
       - "local.service.name=Core - LLM Server: Ollama"
@@ -986,7 +1001,7 @@ services:
 
   core_openwebui:
     container_name: core_openwebui
-    image: ghcr.io/open-webui/open-webui:git-1dfb479
+    image: ghcr.io/open-webui/open-webui:$SERVICE_OPENWEBUI_VERSION
     labels:
       - "local.service.name=Core - LLM Web UI: OpenWebUI"
       - "local.service.description=Core OpenWebUI web ui for chatting with LLMs. This service must be able to communitcate with the Ollama inference server via port $CORE_OLLAMA_CONTAINER_HTTP_PORT. Certain directories for this service are made available to the host machine for the purposes of data persistence."
@@ -1029,7 +1044,7 @@ services:
 
   core_kokoro_tts:
     container_name: core_kokoro_tts
-    image: ghcr.io/remsky/kokoro-fastapi:latest
+    image: ghcr.io/remsky/kokoro-fastapi-ui:$SERVICE_KOKORO_TTS_VERSION
     labels:
       - "local.service.name=Core - LLM Web UI: Kokoro TTS"
       - "local.service.description=Core Kokoro TTS fast api for text-to-speech. Certain directories for this service are made available to the host machine for the purposes of data persistence."
@@ -1046,7 +1061,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s      
+      start_period: 300s      
     entrypoint: /bin/sh
     command: |
       -c '
@@ -1083,13 +1098,17 @@ services:
         echo "Cloning Kokoro-82M repository..."
         cd /app
         git clone https://huggingface.co/hexgrad/Kokoro-82M
+        echo "Downloading af_irulan.pt voice..."
+        curl -L https://github.com/remsky/Kokoro-FastAPI/releases/download/v0.1.0/af_irulan.pt -o /app/Kokoro-82M/voices/af_irulan.pt
+        echo "Downloading am_gurney.pt voice..."
+        curl -L https://github.com/remsky/Kokoro-FastAPI/releases/download/v0.1.0/am_gurney.pt -o /app/Kokoro-82M/voices/am_gurney.pt
       fi
       
       # Handle Kokoro-FastAPI repository
       if [ ! -d "/app/.github" ]; then
         echo "Downloading and extracting Kokoro-FastAPI..."
         cd /app
-        curl -L https://github.com/remsky/Kokoro-FastAPI/archive/refs/heads/master.zip -o kokoro.zip &&         unzip -o kokoro.zip &&         cp -rf Kokoro-FastAPI-master/* . &&         cp -rf Kokoro-FastAPI-master/.[!.]* . 2>/dev/null || true &&         rm -rf Kokoro-FastAPI-master kokoro.zip
+        curl -L https://github.com/remsky/Kokoro-FastAPI/archive/refs/tags/v0.0.5.zip -o kokoro.zip &&         unzip -o kokoro.zip &&         cp -rf Kokoro-FastAPI-0.0.5/* . &&         cp -rf Kokoro-FastAPI-0.0.5/.[!.]* . 2>/dev/null || true &&         rm -rf Kokoro-FastAPI-0.0.5 kokoro.zip
       fi
       
       echo "Installing requirements..."
