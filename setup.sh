@@ -84,6 +84,8 @@ CORE_GPTSOVITS_TTS_DATA_PATH="$CORE_DATA_PATH/gptsovits_tts"
 CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.gptsovits_tts.env"
 CORE_GPTSOVITS_TTS_HOST_HTTP_PORT=8087
 CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT=9880
+CORE_GPTSOVITS_WEBUI_HOST_HTTP_PORT=8088
+CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT=9872
 
 # breakstring/gpt-sovits:
 
@@ -176,6 +178,7 @@ create_project_structure() {
   # Create core service directories
   sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,searxng,pgadmin,phpmyadmin,ollama,openwebui,kokoro_tts,gptsovits_tts} || error "Failed to create core service directories."
   sudo -u $USER mkdir -p $CORE_PGADMIN_DATA_PATH/storage_pgadmin || error "Failed to create core PGAdmin directories."
+  sudo -u $USER mkdir -p $CORE_OLLAMA_DATA_PATH/{data_models,data_config} || error "Failed to create core Ollama directories."
   sudo -u $USER mkdir -p $CORE_KOKORO_TTS_DATA_PATH/{data_src,data_models,data_ui} || error "Failed to create core Kokoro TTS directories."
 
   # Create production service directories
@@ -279,7 +282,6 @@ generate_secrets() {
 
   if [ ! -f "$CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to create core .gptsovits_tts.env."
-    echo "PYTHONPATH=/workspace:
     echo "PATH=/home/appuser/.local/bin:\$PATH" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write PATH to core .gptsovits_tts.env."
     echo "is_half=False" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write is_half to core .gptsovits_tts.env."
     echo "is_share=False" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write is_share to core .gptsovits_tts.env."
@@ -402,12 +404,18 @@ volumes:
       type: none
       device: ${CORE_PHPMYADMIN_DATA_PATH}/
       o: bind
-  host_core_ollama_storage_volume:
+  host_core_ollama_data_models_volume:
     driver: local
     driver_opts:
       type: none
-      device: ${CORE_OLLAMA_DATA_PATH}/
+      device: ${CORE_OLLAMA_DATA_PATH}/data_models/
       o: bind
+  host_core_ollama_data_config_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${CORE_OLLAMA_DATA_PATH}/data_config/
+      o: bind  
   host_core_openwebui_storage_volume:
     driver: local
     driver_opts:
@@ -775,7 +783,7 @@ services:
     ports:
       - "${CORE_PGADMIN_HOST_HTTP_PORT}:${CORE_PGADMIN_CONTAINER_HTTP_PORT}"  
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://core_pgadmin:${CORE_PGADMIN_CONTAINER_HTTP_PORT}/"]
+      test: ["CMD", "wget", "-q", "http://core_pgadmin:${CORE_PGADMIN_CONTAINER_HTTP_PORT}/", "-O", "/dev/null"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -890,35 +898,35 @@ services:
         max_attempts=30
         attempt=1
         echo "Waiting for Ollama server to be ready..."
-        while [ $\$attempt -le $\$max_attempts ]; do
+        while [ \$attempt -le \$max_attempts ]; do
           if check_server; then
             echo "Ollama server is ready!"
             return 0
           fi
-          echo "Attempt $\$attempt/$\$max_attempts: Server not ready, waiting..."
+          echo "Attempt \$attempt/\$max_attempts: Server not ready, waiting..."
           sleep 10
-          attempt=$\$((attempt + 1))
+          attempt=\$((attempt + 1))
         done
         echo "Failed to connect to Ollama server after multiple attempts"
         return 1
       }
       
       download_model() {
-        local model="$\$1"
+        local model="\$1"
         local max_retries=3
         local retry=1
         
-        while [ $\$retry -le $\$max_retries ]; do
-          echo "Downloading model '"$\$model"' (attempt $\$retry/$\$max_retries)..."
-          if /bin/ollama pull "$\$model"; then
-            echo "Successfully downloaded model '"$\$model"'"
+        while [ \$retry -le \$max_retries ]; do
+          echo \"Downloading model '\$model' - Attempt \$retry of \$max_retries...\"
+          if /bin/ollama pull "\$model"; then
+            echo \"Successfully downloaded model '\$model'\"
             return 0
           fi
-          echo "Failed to download model '"$\$model"' on attempt $\$retry"
-          retry=$\$((retry + 1))
-          [ $\$retry -le $\$max_retries ] && sleep 5
+          echo \"Failed to download model '\$model' - Attempt \$retry\"
+          retry=\$((retry + 1))
+          [ \$retry -le \$max_retries ] && sleep 5
         done
-        return 1
+        return 1      
       }
       
       echo "Starting Ollama server..."
@@ -930,7 +938,7 @@ services:
             
       # Start the server
       /bin/ollama serve &
-      server_pid=$\$!
+      server_pid=\$!
       
       # Wait for server to be ready
       if ! wait_for_server; then
@@ -950,48 +958,48 @@ services:
       echo "Downloading mxbai-embed-large..."
       if ! /bin/ollama pull mxbai-embed-large; then
         echo "Failed to download mxbai-embed-large"
-        download_errors=$\$((download_errors + 1))
+        download_errors=\$((download_errors + 1))
       fi
       
       echo "Downloading llama3.2:3b..."
       if ! /bin/ollama pull llama3.2:3b; then
         echo "Failed to download llama3.2:3b"
-        download_errors=$\$((download_errors + 1))
+        download_errors=\$((download_errors + 1))
       fi
       
       echo "Downloading phi3.5:3.8b..."
       if ! /bin/ollama pull phi3.5:3.8b; then
         echo "Failed to download phi3.5:3.8b"
-        download_errors=$\$((download_errors + 1))
+        download_errors=\$((download_errors + 1))
       fi
 
       echo "Downloading qwen2.5:7b..."
       if ! /bin/ollama pull qwen2.5:7b; then
         echo "Failed to download qwen2.5:7b"
-        download_errors=$\$((download_errors + 1))
+        download_errors=\$((download_errors + 1))
       fi        
 
       echo "Downloading qwen2.5:14b..."
       if ! /bin/ollama pull qwen2.5:14b; then
         echo "Failed to download qwen2.5:14b"
-        download_errors=$\$((download_errors + 1))
+        download_errors=\$((download_errors + 1))
       fi      
 
       echo "Downloading hhao/qwen2.5-coder-tools:32b..."
       if ! /bin/ollama pull hhao/qwen2.5-coder-tools:32b; then
         echo "Failed to download hhao/qwen2.5-coder-tools:32b"
-        download_errors=$\$((download_errors + 1))
+        download_errors=\$((download_errors + 1))
       fi      
 
       # Report final status
-      if [ "$\$download_errors" = "0" ]; then
+      if [ "\${download_errors}" = "0" ]; then
         echo "All models downloaded successfully!"
       else
-        echo "Warning: $\$download_errors model(s) failed to download"
+        echo "Warning: \${download_errors} model(s) failed to download"
       fi
       
       # Keep container running
-      wait $\$server_pid'
+      wait \$server_pid'
     # runtime: nvidia
     deploy:
       resources:
@@ -1007,8 +1015,8 @@ services:
       options:
         tag: "core-llm-server/{{.Name}}" 
     volumes:
-      - host_core_ollama_storage_volume:/root/.ollama
-      - host_core_ollama_storage_volume:/data        
+      - host_core_ollama_data_config_volume:/root/.ollama
+      - host_core_ollama_data_models_volume:/data        
     networks:
       - core_monitoring_network      
       - core_ai_network
@@ -1054,111 +1062,6 @@ services:
         tag: "core-llm-ui/{{.Name}}" 
     volumes:
       - host_core_openwebui_storage_volume:/app/backend/data         
-    networks:
-      - core_monitoring_network
-      - core_ai_network
-
-
-  # Core GPTSOVITS TTS Service
-  # Host Accessible at: http://localhost:${CORE_GPTSOVITS_TTS_HOST_HTTP_PORT}
-  # Docker Accessible at: http://localhost:${CORE_GPTSOVITS_TTS_HOST_HTTP_PORT}
-  # Healthcheck status: working
-
-  core_gptsovits_tts:
-    container_name: core_gptsovits_tts
-    image: breakstring/gpt-sovits:${SERVICE_GPTSOVITS_TTS_VERSION}
-    labels:
-      - "local.service.name=Core - LLM TTS and Web UI: GPTSOVITS TTS"
-      - "local.service.description=Core GPTSOVITS TTS for text-to-speech. Certain directories for this service are made available to the host machine for the purposes of data persistence."
-      - "local.service.source.url=https://github.com/RVC-Boss/GPT-SoVITS"
-      - "portainer.agent.stack=true"
-    restart: unless-stopped
-    env_file:
-      - ${CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE}
-    ports:
-      - "9880:9880"
-      - "9871:9871"
-      - "9872:9872"
-      - "9873:9873"
-      - "9874:9874"
-    healthcheck:  
-      test: ["CMD", "curl", "-f", "http://core_gptsovits:${CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT}/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    entrypoint: /bin/sh
-    command: |
-      -c '
-      cd /workspace
-      # Installing dependencies...
-      apt-get update && apt-get install -y --no-install-recommends python3-pip python3-dev apt-utils curl lsof ffmpeg libsox-dev unzip git git-lfs
-      apt-get clean
-      rm -rf /var/lib/apt/lists/
-      # git lfs install
-      
-      echo "Creating appuser..."
-      useradd -m -u 1000 appuser || true
-      
-      echo "Setting owner of workspace directory to appuser..."
-      chown -R appuser:appuser /workspace
-
-      # Killing processes on ports...
-      for port in 9880 9871 9872 9873 9874; do
-        pid=\$(lsof -t -i :"\$port" 2>/dev/null)
-        if [ ! -z "\$pid" ]; then
-          kill -9 "\$pid"
-        fi
-      done 
-
-      # Handle GPT-SoVITS repository
-      if [ ! -d "/workspace/.github" ]; then
-        echo "Downloading and extracting GPT-SoVITS from github..."
-        cd /workspace
-        curl -L https://github.com/RVC-Boss/GPT-SoVITS/archive/refs/heads/main.zip -o gptsovits.zip && unzip -o gptsovits.zip && cp -rf GPT-SoVITS-main/* . && cp -rf GPT-SoVITS-main/.[!.]* . 2>/dev/null || true && rm -rf GPT-SoVITS-main gptsovits.zip
-      fi
-
-      # Handle GPT-SoVITS pretrained models
-      if [ ! -d "/workspace/GPT_SoVITS/pretrained_models/.git" ]; then
-        echo "Updating GPT-SoVITS pretrained models from huggingface.com..."
-        git clone https://huggingface.co/lj1995/GPT-SoVITS /workspace/temp
-        cp -rf /workspace/temp/. /workspace/GPT_SoVITS/pretrained_models/ && rm -rf /workspace/temp
-      fi
-
-      echo "Installing requirements..."
-      
-      su appuser -c "python3 -m pip install --upgrade pip"
-      su appuser -c "pip3 cache purge"
-
-      if [ -f "/workspace/requirements.txt" ]; then        
-        su appuser -c "cd /workspace && pip3 install --no-cache-dir -r requirements.txt"
-      fi
-
-      echo "Downloading reference voice bf_emma.mp3..."
-      su appuser -c "curl -L https://github.com/SamuraiBarbi/jttw-ai-docker-stack/raw/refs/heads/main/reference_voice_bf_emma.mp3 -o /workspace/bf_emma.mp3"
-      chown -R appuser:appuser /workspace
-      echo "Starting api server and gradio ui..."
-      PATH=/home/appuser/.local/bin:$PATH
-      (su -s /bin/bash appuser -c "cd /workspace && python3 api_v2.py -a 0.0.0.0 -p 9880 -c GPT_SoVITS/configs/tts_infer.yaml" &)
-      su appuser -c "cd /workspace && python3 GPT_SoVITS/inference_webui.py en"'
-    depends_on:
-      core_ollama:
-        condition: service_healthy      
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              capabilities: [gpu]
-        limits:
-          cpus: '0.50'
-          memory: 8192M
-    logging:
-      <<: *default-logging
-      options:
-        tag: "core-tts-server/{{.Name}}" 
-    volumes:
-      - host_core_gptsovits_tts_storage_volume:/workspace         
     networks:
       - core_monitoring_network
       - core_ai_network
@@ -1281,6 +1184,112 @@ services:
       - core_ai_network
       - production_app_network
       - development_app_network
+
+
+  # Core GPTSOVITS TTS Service
+  # Host Accessible at: http://localhost:${CORE_GPTSOVITS_TTS_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_GPTSOVITS_TTS_HOST_HTTP_PORT}
+  # Healthcheck status: working
+
+  core_gptsovits_tts:
+    container_name: core_gptsovits_tts
+    image: breakstring/gpt-sovits:${SERVICE_GPTSOVITS_TTS_VERSION}
+    labels:
+      - "local.service.name=Core - LLM TTS and Web UI: GPTSOVITS TTS"
+      - "local.service.description=Core GPTSOVITS TTS for text-to-speech. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.source.url=https://github.com/RVC-Boss/GPT-SoVITS"
+      - "portainer.agent.stack=true"
+    restart: unless-stopped
+    env_file:
+      - ${CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE}
+    ports:
+      - "${CORE_GPTSOVITS_TTS_HOST_HTTP_PORT}:${CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT}"
+      # - "9871:9871"
+      - "${CORE_GPTSOVITS_WEBUI_HOST_HTTP_PORT}:${CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT}"
+      # - "9873:9873"
+      # - "9874:9874"
+    healthcheck:  
+      test: ["CMD", "curl", "-f", "http://core_gptsovits_tts:${CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT}/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 480s
+    entrypoint: /bin/sh
+    command: |
+      -c '
+      cd /workspace
+      # Installing dependencies...
+      apt-get update && apt-get install -y --no-install-recommends python3-pip python3-dev apt-utils curl lsof ffmpeg libsox-dev unzip git git-lfs
+      apt-get clean
+      rm -rf /var/lib/apt/lists/
+      # git lfs install
+      
+      echo "Creating appuser..."
+      useradd -m -u 1000 appuser || true
+      
+      echo "Setting owner of workspace directory to appuser..."
+      chown -R appuser:appuser /workspace
+
+      # Killing processes on ports...
+      for port in ${CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT} 9871 ${CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT} 9873 9874; do
+        pid=\$(lsof -t -i :"\$port" 2>/dev/null)
+        if [ ! -z "\$pid" ]; then
+          kill -9 "\$pid"
+        fi
+      done 
+
+      # Handle GPT-SoVITS repository
+      if [ ! -d "/workspace/.github" ]; then
+        echo "Downloading and extracting GPT-SoVITS from github..."
+        cd /workspace
+        curl -L https://github.com/RVC-Boss/GPT-SoVITS/archive/refs/heads/main.zip -o gptsovits.zip && unzip -o gptsovits.zip && cp -rf GPT-SoVITS-main/* . && cp -rf GPT-SoVITS-main/.[!.]* . 2>/dev/null || true && rm -rf GPT-SoVITS-main gptsovits.zip
+      fi
+
+      # Handle GPT-SoVITS pretrained models
+      if [ ! -d "/workspace/GPT_SoVITS/pretrained_models/.git" ]; then
+        echo "Updating GPT-SoVITS pretrained models from huggingface.com..."
+        git clone https://huggingface.co/lj1995/GPT-SoVITS /workspace/temp
+        cp -rf /workspace/temp/. /workspace/GPT_SoVITS/pretrained_models/ && rm -rf /workspace/temp
+      fi
+
+      echo "Installing requirements..."
+      
+      su appuser -c "python3 -m pip install --upgrade pip"
+      su appuser -c "pip3 cache purge"
+
+      if [ -f "/workspace/requirements.txt" ]; then        
+        su appuser -c "cd /workspace && pip3 install --no-cache-dir -r requirements.txt"
+      fi
+
+      echo "Downloading reference voice bf_emma.mp3..."
+      su appuser -c "curl -L https://github.com/SamuraiBarbi/jttw-ai-docker-stack/raw/refs/heads/main/reference_voice_bf_emma.mp3 -o /workspace/bf_emma.mp3"
+      chown -R appuser:appuser /workspace
+      echo "Starting api server and gradio ui..."
+      PATH=/home/appuser/.local/bin:\$PATH
+      (su -s /bin/bash appuser -c "cd /workspace && python3 api_v2.py -a 0.0.0.0 -p ${CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT} -c GPT_SoVITS/configs/tts_infer.yaml" &)
+      su appuser -c "cd /workspace && python3 GPT_SoVITS/inference_webui.py en"'
+    depends_on:
+      core_ollama:
+        condition: service_healthy      
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+        limits:
+          cpus: '0.50'
+          memory: 8192M
+    logging:
+      <<: *default-logging
+      options:
+        tag: "core-tts-server/{{.Name}}" 
+    volumes:
+      - host_core_gptsovits_tts_storage_volume:/workspace         
+    networks:
+      - core_monitoring_network
+      - core_ai_network
+
 
 # Production Services
 
