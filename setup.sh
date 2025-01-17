@@ -13,6 +13,7 @@ SERVICE_PHPMYADMIN_VERSION="5.2.1"
 SERVICE_OLLAMA_VERSION="0.5.1"
 SERVICE_OPENWEBUI_VERSION="git-1dfb479"
 SERVICE_KOKORO_TTS_VERSION="v0.0.5"
+SERVICE_GPTSOVITS_TTS_VERSION="dev-e80abbc"
 SERVICE_PHPFPM_APACHE_VERSION="php8"
 SERVICE_POSTGRES_VERSION="12.22"
 SERVICE_MARIADB_VERSION="10.6"
@@ -79,7 +80,12 @@ CORE_KOKORO_WEBUI_HOST_HTTP_PORT=8086
 CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT=7860
 
 
+CORE_GPTSOVITS_TTS_DATA_PATH="$CORE_DATA_PATH/gptsovits_tts"
+CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.gptsovits_tts.env"
+CORE_GPTSOVITS_TTS_HOST_HTTP_PORT=8087
+CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT=9880
 
+# breakstring/gpt-sovits:
 
 # Define production service data path and environment file variables
 PRODUCTION_PHPFPM_APACHE_DATA_PATH="$PRODUCTION_DATA_PATH/phpfpm_apache"
@@ -168,7 +174,7 @@ create_project_structure() {
   sudo -u $USER mkdir -p $BASE_PATH/{core,production,development}/{data,secrets} || error "Failed to create base directories."
 
   # Create core service directories
-  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,searxng,pgadmin,phpmyadmin,ollama,openwebui,kokoro_tts} || error "Failed to create core service directories."
+  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,searxng,pgadmin,phpmyadmin,ollama,openwebui,kokoro_tts,gptsovits_tts} || error "Failed to create core service directories."
   sudo -u $USER mkdir -p $CORE_PGADMIN_DATA_PATH/storage_pgadmin || error "Failed to create core PGAdmin directories."
   sudo -u $USER mkdir -p $CORE_KOKORO_TTS_DATA_PATH/{data_src,data_models,data_ui} || error "Failed to create core Kokoro TTS directories."
 
@@ -271,6 +277,16 @@ generate_secrets() {
     echo "PYTHONUNBUFFERED=1" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONUNBUFFERED to core .kokoro_tts.env."
   fi
 
+  if [ ! -f "$CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to create core .gptsovits_tts.env."
+    echo "PYTHONPATH=/workspace:
+    echo "PATH=/home/appuser/.local/bin:\$PATH" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write PATH to core .gptsovits_tts.env."
+    echo "is_half=False" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write is_half to core .gptsovits_tts.env."
+    echo "is_share=False" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write is_share to core .gptsovits_tts.env."
+    echo "DEBIAN_FRONTEND=noninteractive" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write DEBIAN_FRONTEND to core .gptsovits_tts.env."
+    echo "TZ=Etc/UTC" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write TZ to core .gptsovits_tts.env."
+  fi
+
   # Production secrets
   if [ ! -f "$PRODUCTION_POSTGRES_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $PRODUCTION_POSTGRES_ENVIRONMENT_FILE || error "Failed to create production .postgres.env."
@@ -341,9 +357,9 @@ create_docker_configs() {
 # To stop the containers, run: sudo -S docker compose down --remove-orphans
 # To remove the containers, run: sudo -S docker compose down --remove-orphans && sudo -S docker system prune -af
 # To list the containers, run: sudo -S docker ps -a && echo '=== Images ===' && echo darkness | sudo -S docker images && echo '=== Networks ===' && echo darkness | sudo -S docker network ls
-# To remove all persisted volume data, run: sudo rm -rf $BASE_PATH
-# To rebuild the project, run: cd $HOME/Documents/projects/jttw-ai-docker-stack && bash setup.sh
-# To start the project, run: cd $HOME/Documents/projects/jttw-ai-docker-stack && sudo -S docker compose up -d
+# To remove all persisted volume data, run: sudo rm -rf ${BASE_PATH}
+# To rebuild the project, run: cd \$HOME/Documents/projects/jttw-ai-docker-stack && bash setup.sh
+# To start the project, run: cd \$HOME/Documents/projects/jttw-ai-docker-stack && sudo -S docker compose up -d
 # Example to get a docker containers logs: docker logs production_mariadb
 # Example to execute a command in a container: docker exec core_ollama ollama list
 
@@ -354,68 +370,74 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_PATH/
+      device: ${CORE_PATH}/
       o: bind    
   host_core_secrets_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_SECRETS_PATH/
+      device: ${CORE_SECRETS_PATH}/
       o: bind
   host_core_portainer_storage_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_PORTAINER_DATA_PATH/
+      device: ${CORE_PORTAINER_DATA_PATH}/
       o: bind
   host_core_searxng_storage_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_SEARXNG_DATA_PATH/
+      device: ${CORE_SEARXNG_DATA_PATH}/
       o: bind
   host_core_pgadmin_storage_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_PGADMIN_DATA_PATH/storage_pgadmin/
+      device: ${CORE_PGADMIN_DATA_PATH}/storage_pgadmin/
       o: bind            
   host_core_phpmyadmin_storage_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_PHPMYADMIN_DATA_PATH/
+      device: ${CORE_PHPMYADMIN_DATA_PATH}/
       o: bind
   host_core_ollama_storage_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_OLLAMA_DATA_PATH/
+      device: ${CORE_OLLAMA_DATA_PATH}/
       o: bind
   host_core_openwebui_storage_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_OPENWEBUI_DATA_PATH/
+      device: ${CORE_OPENWEBUI_DATA_PATH}/
       o: bind      
   host_core_kokoro_tts_data_src_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_KOKORO_TTS_DATA_PATH/data_src/
+      device: ${CORE_KOKORO_TTS_DATA_PATH}/data_src/
       o: bind    
   host_core_kokoro_tts_data_models_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_KOKORO_TTS_DATA_PATH/data_models/
+      device: ${CORE_KOKORO_TTS_DATA_PATH}/data_models/
       o: bind 
   host_core_kokoro_tts_data_ui_volume:
     driver: local
     driver_opts:
       type: none
-      device: $CORE_KOKORO_TTS_DATA_PATH/data_ui/
+      device: ${CORE_KOKORO_TTS_DATA_PATH}/data_ui/
       o: bind 
+  host_core_gptsovits_tts_storage_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${CORE_GPTSOVITS_TTS_DATA_PATH}/
+      o: bind
 
 
 # Production volumes
@@ -424,49 +446,49 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: $PRODUCTION_SECRETS_PATH/
+      device: ${PRODUCTION_SECRETS_PATH}/
       o: bind   
   host_production_phpfpm_apache_data_apache_volume:
     driver: local
     driver_opts:
       type: none
-      device: $PRODUCTION_PHPFPM_APACHE_DATA_PATH/data_apache/
+      device: ${PRODUCTION_PHPFPM_APACHE_DATA_PATH}/data_apache/
       o: bind
   host_production_phpfpm_apache_config_php_volume:
     driver: local
     driver_opts:
       type: none
-      device: $PRODUCTION_PHPFPM_APACHE_DATA_PATH/config_php/
+      device: ${PRODUCTION_PHPFPM_APACHE_DATA_PATH}/config_php/
       o: bind    
   host_production_phpfpm_apache_config_apache_volume:
     driver: local
     driver_opts:
       type: none
-      device: $PRODUCTION_PHPFPM_APACHE_DATA_PATH/config_apache/
+      device: ${PRODUCTION_PHPFPM_APACHE_DATA_PATH}/config_apache/
       o: bind    
   host_production_postgres_data_postgresql_volume:
     driver: local
     driver_opts:
       type: none
-      device: $PRODUCTION_POSTGRES_DATA_PATH/data_postgresql/
+      device: ${PRODUCTION_POSTGRES_DATA_PATH}/data_postgresql/
       o: bind   
   host_production_mariadb_data_mysql_volume:
     driver: local
     driver_opts:
       type: none
-      device: $PRODUCTION_MARIADB_DATA_PATH/data_mysql/
+      device: ${PRODUCTION_MARIADB_DATA_PATH}/data_mysql/
       o: bind
   host_production_neo4j_data_volume:
     driver: local
     driver_opts:
       type: none
-      device: $PRODUCTION_NEO4J_DATA_PATH/data/
+      device: ${PRODUCTION_NEO4J_DATA_PATH}/data/
       o: bind
   host_production_neo4j_logs_volume:
     driver: local
     driver_opts:
       type: none
-      device: $PRODUCTION_NEO4J_DATA_PATH/logs/
+      device: ${PRODUCTION_NEO4J_DATA_PATH}/logs/
       o: bind
 
 # Development volumes
@@ -475,49 +497,49 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: $DEVELOPMENT_SECRETS_PATH/
+      device: ${DEVELOPMENT_SECRETS_PATH}/
       o: bind 
   host_development_phpfpm_apache_data_apache_volume:
     driver: local
     driver_opts:
       type: none
-      device: $DEVELOPMENT_PHPFPM_APACHE_DATA_PATH/data_apache/
+      device: ${DEVELOPMENT_PHPFPM_APACHE_DATA_PATH}/data_apache/
       o: bind
   host_development_phpfpm_apache_config_php_volume:
     driver: local
     driver_opts:
       type: none
-      device: $DEVELOPMENT_PHPFPM_APACHE_DATA_PATH/config_php/
+      device: ${DEVELOPMENT_PHPFPM_APACHE_DATA_PATH}/config_php/
       o: bind    
   host_development_phpfpm_apache_config_apache_volume:
     driver: local
     driver_opts:
       type: none
-      device: $DEVELOPMENT_PHPFPM_APACHE_DATA_PATH/config_apache/
+      device: ${DEVELOPMENT_PHPFPM_APACHE_DATA_PATH}/config_apache/
       o: bind   
   host_development_postgres_data_postgresql_volume:
     driver: local
     driver_opts:
       type: none
-      device: $DEVELOPMENT_POSTGRES_DATA_PATH/data_postgresql/
+      device: ${DEVELOPMENT_POSTGRES_DATA_PATH}/data_postgresql/
       o: bind 
   host_development_mariadb_data_mysql_volume:
     driver: local
     driver_opts:
       type: none
-      device: $DEVELOPMENT_MARIADB_DATA_PATH/data_mysql/
+      device: ${DEVELOPMENT_MARIADB_DATA_PATH}/data_mysql/
       o: bind
   host_development_neo4j_data_volume:
     driver: local
     driver_opts:
       type: none
-      device: $DEVELOPMENT_NEO4J_DATA_PATH/data/
+      device: ${DEVELOPMENT_NEO4J_DATA_PATH}/data/
       o: bind
   host_development_neo4j_logs_volume:
     driver: local
     driver_opts:
       type: none
-      device: $DEVELOPMENT_NEO4J_DATA_PATH/logs/
+      device: ${DEVELOPMENT_NEO4J_DATA_PATH}/logs/
       o: bind
 
 # Logging configuration
@@ -532,7 +554,7 @@ x-logging: &default-logging
 # Common services configuration
 
 x-common_phpfpm_apache: &common_phpfpm_apache
-  image: shinsenter/phpfpm-apache:$SERVICE_PHPFPM_APACHE_VERSION
+  image: shinsenter/phpfpm-apache:${SERVICE_PHPFPM_APACHE_VERSION}
   restart: unless-stopped 
   deploy:
     resources:
@@ -541,7 +563,7 @@ x-common_phpfpm_apache: &common_phpfpm_apache
         memory: 512M
 
 x-common_postgres: &common_postgres
-  image: postgres:$SERVICE_POSTGRES_VERSION
+  image: postgres:${SERVICE_POSTGRES_VERSION}
   restart: unless-stopped
   deploy:
     resources:
@@ -556,7 +578,7 @@ x-common_postgres: &common_postgres
     start_period: 40s    
 
 x-common_mariadb: &common_mariadb        
-  image: mariadb:$SERVICE_MARIADB_VERSION
+  image: mariadb:${SERVICE_MARIADB_VERSION}
   restart: unless-stopped
   deploy:
     resources:
@@ -565,7 +587,7 @@ x-common_mariadb: &common_mariadb
         memory: 1G
 
 x-common_neo4j: &common_neo4j
-  image: neo4j:$SERVICE_NEO4J_VERSION
+  image: neo4j:${SERVICE_NEO4J_VERSION}
   restart: unless-stopped
   depends_on:
     core_ollama:
@@ -597,7 +619,7 @@ configs:
             "Name": "Production PostgreSQL",
             "Group": "Servers",
             "Host": "production_postgres",
-            "Port": $PRODUCTION_POSTGRES_CONTAINER_TCP_PORT,
+            "Port": ${PRODUCTION_POSTGRES_CONTAINER_TCP_PORT},
             "MaintenanceDB": "postgres",
             "Username": "production_user",
             "SSLMode": "prefer"
@@ -606,7 +628,7 @@ configs:
             "Name": "Development PostgreSQL",
             "Group": "Servers",
             "Host": "development_postgres",
-            "Port": $DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT,
+            "Port": ${DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT},
             "MaintenanceDB": "postgres",
             "Username": "development_user",
             "SSLMode": "prefer"
@@ -619,13 +641,13 @@ services:
 # Core Services
 
   # Core Portainer Service
-  # Host Accessible at: http://localhost:$CORE_PORTAINER_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$CORE_PORTAINER_CONTAINER_HTTP_PORT
+  # Host Accessible at: http://localhost:${CORE_PORTAINER_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_PORTAINER_CONTAINER_HTTP_PORT}
   # Healthcheck status: Not sure how to healthcheck Portainer because it lacks bash and shell. http://core_portainer:$CORE_PORTAINER_HOST_HTTP_PORT/api/system/status would be the best
   
   core_portainer:
     container_name: core_portainer
-    image: portainer/portainer-ce:$SERVICE_PORTAINER_VERSION
+    image: portainer/portainer-ce:${SERVICE_PORTAINER_VERSION}
     labels:
       - "local.service.name=Core - Docker Web UI: Portainer"
       - "local.service.description=Core Portainer provides a web-based UI for managing Docker containers."
@@ -633,9 +655,9 @@ services:
       - "portainer.agent.stack=true"
     restart: unless-stopped
     env_file:
-      - $CORE_PORTAINER_ENVIRONMENT_FILE
+      - ${CORE_PORTAINER_ENVIRONMENT_FILE}
     ports:
-      - "$CORE_PORTAINER_HOST_HTTP_PORT:$CORE_PORTAINER_CONTAINER_HTTP_PORT"
+      - "${CORE_PORTAINER_HOST_HTTP_PORT}:${CORE_PORTAINER_CONTAINER_HTTP_PORT}"
     deploy:
       resources:
         limits:
@@ -653,13 +675,13 @@ services:
 
 
   # Core SearxNG Service
-  ## Host Accessible at: http://localhost:$CORE_SEARXNG_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$CORE_SEARXNG_CONTAINER_HTTP_PORT
+  ## Host Accessible at: http://localhost:${CORE_SEARXNG_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_SEARXNG_CONTAINER_HTTP_PORT}
   # Healthcheck status: working
 
   core_searxng:
     container_name: core_searxng
-    image: searxng/searxng:$SERVICE_SEARXNG_VERSION
+    image: searxng/searxng:${SERVICE_SEARXNG_VERSION}
     restart: unless-stopped
     user: "${HOST_USER_UID}:${HOST_USER_GID}"
     labels:
@@ -668,11 +690,11 @@ services:
       - "local.service.source.url=https://github.com/searxng/searxng"
       - "portainer.agent.stack=true"  
     env_file:
-      - $CORE_SEARXNG_ENVIRONMENT_FILE     
+      - ${CORE_SEARXNG_ENVIRONMENT_FILE}     
     ports:
-      - "$CORE_SEARXNG_HOST_HTTP_PORT:$CORE_SEARXNG_CONTAINER_HTTP_PORT" 
+      - "${CORE_SEARXNG_HOST_HTTP_PORT}:${CORE_SEARXNG_CONTAINER_HTTP_PORT}" 
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://core_searxng:$CORE_SEARXNG_CONTAINER_HTTP_PORT/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://core_searxng:${CORE_SEARXNG_CONTAINER_HTTP_PORT}/"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -735,13 +757,13 @@ services:
 
 
   # Core PGAdmin Service
-  # Host Accessible at: http://localhost:$CORE_PGADMIN_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$CORE_PGADMIN_CONTAINER_HTTP_PORT
+  # Host Accessible at: http://localhost:${CORE_PGADMIN_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_PGADMIN_CONTAINER_HTTP_PORT}
   # Healthcheck status: working
 
   core_pgadmin:
     container_name: core_pgadmin
-    image: dpage/pgadmin4:$SERVICE_PGADMIN_VERSION
+    image: dpage/pgadmin4:${SERVICE_PGADMIN_VERSION}
     restart: unless-stopped
     labels:
       - "local.service.name=CORE - DB Web UI: PGAdmin"
@@ -749,11 +771,11 @@ services:
       - "local.service.source.url=https://github.com/pgadmin-org/pgadmin4"
       - "portainer.agent.stack=true"
     env_file:
-      - $CORE_PGADMIN_ENVIRONMENT_FILE
+      - ${CORE_PGADMIN_ENVIRONMENT_FILE}
     ports:
-      - "$CORE_PGADMIN_HOST_HTTP_PORT:$CORE_PGADMIN_CONTAINER_HTTP_PORT"  
+      - "${CORE_PGADMIN_HOST_HTTP_PORT}:${CORE_PGADMIN_CONTAINER_HTTP_PORT}"  
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://core_pgadmin:$CORE_PGADMIN_CONTAINER_HTTP_PORT/"]
+      test: ["CMD", "curl", "-f", "http://core_pgadmin:${CORE_PGADMIN_CONTAINER_HTTP_PORT}/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -786,13 +808,13 @@ services:
 
 
   # Core PhpMyAdmin Service
-  # Host Accessible at: http://localhost:$CORE_PHPMYADMIN_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$CORE_PHPMYADMIN_CONTAINER_HTTP_PORT
+  # Host Accessible at: http://localhost:${CORE_PHPMYADMIN_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_PHPMYADMIN_CONTAINER_HTTP_PORT}
   # Healthcheck status: working
 
   core_phpmyadmin:
     container_name: core_phpmyadmin
-    image: phpmyadmin/phpmyadmin:$SERVICE_PHPMYADMIN_VERSION
+    image: phpmyadmin/phpmyadmin:${SERVICE_PHPMYADMIN_VERSION}
     restart: unless-stopped
     labels:
       - "local.service.name=CORE - DB Web UI: PHPMyAdmin"
@@ -800,11 +822,11 @@ services:
       - "local.service.source.url=https://github.com/phpmyadmin/phpmyadmin"
       - "portainer.agent.stack=true"    
     env_file:
-      - $CORE_PHPMYADMIN_ENVIRONMENT_FILE
+      - ${CORE_PHPMYADMIN_ENVIRONMENT_FILE}
     ports:
-      - "$CORE_PHPMYADMIN_HOST_HTTP_PORT:$CORE_PHPMYADMIN_CONTAINER_HTTP_PORT"  
+      - "${CORE_PHPMYADMIN_HOST_HTTP_PORT}:${CORE_PHPMYADMIN_CONTAINER_HTTP_PORT}"  
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://core_phpmyadmin:$CORE_PHPMYADMIN_CONTAINER_HTTP_PORT/"]
+      test: ["CMD", "curl", "-f", "http://core_phpmyadmin:${CORE_PHPMYADMIN_CONTAINER_HTTP_PORT}/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -833,13 +855,13 @@ services:
 
 
   # Core Ollama Service
-  # Host Accessible at: http://localhost:$CORE_OLLAMA_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$CORE_OLLAMA_CONTAINER_HTTP_PORT
+  # Host Accessible at: http://localhost:${CORE_OLLAMA_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_OLLAMA_CONTAINER_HTTP_PORT}
   # Healthcheck status: working
 
   core_ollama:
     container_name: core_ollama
-    image: ollama/ollama:$SERVICE_OLLAMA_VERSION   
+    image: ollama/ollama:${SERVICE_OLLAMA_VERSION}
     restart: unless-stopped
     labels:
       - "local.service.name=Core - LLM Server: Ollama"
@@ -847,11 +869,11 @@ services:
       - "local.service.source.url=https://github.com/ollama/ollama"
       - "portainer.agent.stack=true"
     env_file:
-      - $CORE_OLLAMA_ENVIRONMENT_FILE
+      - ${CORE_OLLAMA_ENVIRONMENT_FILE}
     ports:
-      - "$CORE_OLLAMA_HOST_HTTP_PORT:$CORE_OLLAMA_CONTAINER_HTTP_PORT"      
+      - "${CORE_OLLAMA_HOST_HTTP_PORT}:${CORE_OLLAMA_CONTAINER_HTTP_PORT}"      
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://core_ollama:$CORE_OLLAMA_CONTAINER_HTTP_PORT/api/version || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://core_ollama:${CORE_OLLAMA_CONTAINER_HTTP_PORT}/api/version || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -861,40 +883,40 @@ services:
       -c '
       # Define all functions
       check_server() {
-        curl -s http://core_ollama:$CORE_OLLAMA_CONTAINER_HTTP_PORT/api/version >/dev/null 2>&1
+        curl -s http://core_ollama:${CORE_OLLAMA_CONTAINER_HTTP_PORT}/api/version >/dev/null 2>&1
       }
       
       wait_for_server() {
         max_attempts=30
         attempt=1
         echo "Waiting for Ollama server to be ready..."
-        while [ $attempt -le $max_attempts ]; do
+        while [ $\$attempt -le $\$max_attempts ]; do
           if check_server; then
             echo "Ollama server is ready!"
             return 0
           fi
-          echo "Attempt $attempt/$max_attempts: Server not ready, waiting..."
+          echo "Attempt $\$attempt/$\$max_attempts: Server not ready, waiting..."
           sleep 10
-          attempt=$((attempt + 1))
+          attempt=$\$((attempt + 1))
         done
         echo "Failed to connect to Ollama server after multiple attempts"
         return 1
       }
       
       download_model() {
-        local model="$1"
+        local model="$\$1"
         local max_retries=3
         local retry=1
         
-        while [ $retry -le $max_retries ]; do
-          echo "Downloading model '"$model"' (attempt $retry/$max_retries)..."
-          if /bin/ollama pull "$model"; then
-            echo "Successfully downloaded model '"$model"'"
+        while [ $\$retry -le $\$max_retries ]; do
+          echo "Downloading model '"$\$model"' (attempt $\$retry/$\$max_retries)..."
+          if /bin/ollama pull "$\$model"; then
+            echo "Successfully downloaded model '"$\$model"'"
             return 0
           fi
-          echo "Failed to download model '"$model"' on attempt $retry"
-          retry=$((retry + 1))
-          [ $retry -le $max_retries ] && sleep 5
+          echo "Failed to download model '"$\$model"' on attempt $\$retry"
+          retry=$\$((retry + 1))
+          [ $\$retry -le $\$max_retries ] && sleep 5
         done
         return 1
       }
@@ -908,7 +930,7 @@ services:
             
       # Start the server
       /bin/ollama serve &
-      server_pid=$!
+      server_pid=$\$!
       
       # Wait for server to be ready
       if ! wait_for_server; then
@@ -928,48 +950,48 @@ services:
       echo "Downloading mxbai-embed-large..."
       if ! /bin/ollama pull mxbai-embed-large; then
         echo "Failed to download mxbai-embed-large"
-        download_errors=$((download_errors + 1))
+        download_errors=$\$((download_errors + 1))
       fi
       
       echo "Downloading llama3.2:3b..."
       if ! /bin/ollama pull llama3.2:3b; then
         echo "Failed to download llama3.2:3b"
-        download_errors=$((download_errors + 1))
+        download_errors=$\$((download_errors + 1))
       fi
       
       echo "Downloading phi3.5:3.8b..."
       if ! /bin/ollama pull phi3.5:3.8b; then
         echo "Failed to download phi3.5:3.8b"
-        download_errors=$((download_errors + 1))
+        download_errors=$\$((download_errors + 1))
       fi
 
       echo "Downloading qwen2.5:7b..."
       if ! /bin/ollama pull qwen2.5:7b; then
         echo "Failed to download qwen2.5:7b"
-        download_errors=$((download_errors + 1))
+        download_errors=$\$((download_errors + 1))
       fi        
 
       echo "Downloading qwen2.5:14b..."
       if ! /bin/ollama pull qwen2.5:14b; then
         echo "Failed to download qwen2.5:14b"
-        download_errors=$((download_errors + 1))
+        download_errors=$\$((download_errors + 1))
       fi      
 
       echo "Downloading hhao/qwen2.5-coder-tools:32b..."
       if ! /bin/ollama pull hhao/qwen2.5-coder-tools:32b; then
         echo "Failed to download hhao/qwen2.5-coder-tools:32b"
-        download_errors=$((download_errors + 1))
+        download_errors=$\$((download_errors + 1))
       fi      
 
       # Report final status
-      if [ "$download_errors" = "0" ]; then
+      if [ "$\$download_errors" = "0" ]; then
         echo "All models downloaded successfully!"
       else
-        echo "Warning: $download_errors model(s) failed to download"
+        echo "Warning: $\$download_errors model(s) failed to download"
       fi
       
       # Keep container running
-      wait $server_pid'
+      wait $\$server_pid'
     # runtime: nvidia
     deploy:
       resources:
@@ -995,13 +1017,13 @@ services:
 
 
   # Core OpenWebUI Service
-  # Host Accessible at: http://localhost:$CORE_OPENWEBUI_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$CORE_OPENWEBUI_HOST_HTTP_PORT
+  # Host Accessible at: http://localhost:${CORE_OPENWEBUI_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_OPENWEBUI_HOST_HTTP_PORT}
   # Healthcheck status: working
 
   core_openwebui:
     container_name: core_openwebui
-    image: ghcr.io/open-webui/open-webui:$SERVICE_OPENWEBUI_VERSION
+    image: ghcr.io/open-webui/open-webui:${SERVICE_OPENWEBUI_VERSION}
     labels:
       - "local.service.name=Core - LLM Web UI: OpenWebUI"
       - "local.service.description=Core OpenWebUI web ui for chatting with LLMs. This service must be able to communitcate with the Ollama inference server via port $CORE_OLLAMA_CONTAINER_HTTP_PORT. Certain directories for this service are made available to the host machine for the purposes of data persistence."
@@ -1009,11 +1031,11 @@ services:
       - "portainer.agent.stack=true"
     restart: unless-stopped
     env_file:
-      - $CORE_OPENWEBUI_ENVIRONMENT_FILE
+      - ${CORE_OPENWEBUI_ENVIRONMENT_FILE}
     ports:
-      - "$CORE_OPENWEBUI_HOST_HTTP_PORT:$CORE_OPENWEBUI_CONTAINER_HTTP_PORT"
+      - "${CORE_OPENWEBUI_HOST_HTTP_PORT}:${CORE_OPENWEBUI_CONTAINER_HTTP_PORT}"
     healthcheck:  
-      test: ["CMD-SHELL", "curl -f http://core_openwebui:$CORE_OPENWEBUI_CONTAINER_HTTP_PORT/auth || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://core_openwebui:${CORE_OPENWEBUI_CONTAINER_HTTP_PORT}/auth || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1036,28 +1058,134 @@ services:
       - core_monitoring_network
       - core_ai_network
 
+
+  # Core GPTSOVITS TTS Service
+  # Host Accessible at: http://localhost:${CORE_GPTSOVITS_TTS_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_GPTSOVITS_TTS_HOST_HTTP_PORT}
+  # Healthcheck status: working
+
+  core_gptsovits_tts:
+    container_name: core_gptsovits_tts
+    image: breakstring/gpt-sovits:${SERVICE_GPTSOVITS_TTS_VERSION}
+    labels:
+      - "local.service.name=Core - LLM TTS and Web UI: GPTSOVITS TTS"
+      - "local.service.description=Core GPTSOVITS TTS for text-to-speech. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.source.url=https://github.com/RVC-Boss/GPT-SoVITS"
+      - "portainer.agent.stack=true"
+    restart: unless-stopped
+    env_file:
+      - ${CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE}
+    ports:
+      - "9880:9880"
+      - "9871:9871"
+      - "9872:9872"
+      - "9873:9873"
+      - "9874:9874"
+    healthcheck:  
+      test: ["CMD", "curl", "-f", "http://core_gptsovits:${CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT}/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    entrypoint: /bin/sh
+    command: |
+      -c '
+      cd /workspace
+      # Installing dependencies...
+      apt-get update && apt-get install -y --no-install-recommends python3-pip python3-dev apt-utils curl lsof ffmpeg libsox-dev unzip git git-lfs
+      apt-get clean
+      rm -rf /var/lib/apt/lists/
+      # git lfs install
+      
+      echo "Creating appuser..."
+      useradd -m -u 1000 appuser || true
+      
+      echo "Setting owner of workspace directory to appuser..."
+      chown -R appuser:appuser /workspace
+
+      # Killing processes on ports...
+      for port in 9880 9871 9872 9873 9874; do
+        pid=\$(lsof -t -i :"\$port" 2>/dev/null)
+        if [ ! -z "\$pid" ]; then
+          kill -9 "\$pid"
+        fi
+      done 
+
+      # Handle GPT-SoVITS repository
+      if [ ! -d "/workspace/.github" ]; then
+        echo "Downloading and extracting GPT-SoVITS from github..."
+        cd /workspace
+        curl -L https://github.com/RVC-Boss/GPT-SoVITS/archive/refs/heads/main.zip -o gptsovits.zip && unzip -o gptsovits.zip && cp -rf GPT-SoVITS-main/* . && cp -rf GPT-SoVITS-main/.[!.]* . 2>/dev/null || true && rm -rf GPT-SoVITS-main gptsovits.zip
+      fi
+
+      # Handle GPT-SoVITS pretrained models
+      if [ ! -d "/workspace/GPT_SoVITS/pretrained_models/.git" ]; then
+        echo "Updating GPT-SoVITS pretrained models from huggingface.com..."
+        git clone https://huggingface.co/lj1995/GPT-SoVITS /workspace/temp
+        cp -rf /workspace/temp/. /workspace/GPT_SoVITS/pretrained_models/ && rm -rf /workspace/temp
+      fi
+
+      echo "Installing requirements..."
+      
+      su appuser -c "python3 -m pip install --upgrade pip"
+      su appuser -c "pip3 cache purge"
+
+      if [ -f "/workspace/requirements.txt" ]; then        
+        su appuser -c "cd /workspace && pip3 install --no-cache-dir -r requirements.txt"
+      fi
+
+      echo "Downloading reference voice bf_emma.mp3..."
+      su appuser -c "curl -L https://github.com/SamuraiBarbi/jttw-ai-docker-stack/raw/refs/heads/main/reference_voice_bf_emma.mp3 -o /workspace/bf_emma.mp3"
+      chown -R appuser:appuser /workspace
+      echo "Starting api server and gradio ui..."
+      PATH=/home/appuser/.local/bin:$PATH
+      (su -s /bin/bash appuser -c "cd /workspace && python3 api_v2.py -a 0.0.0.0 -p 9880 -c GPT_SoVITS/configs/tts_infer.yaml" &)
+      su appuser -c "cd /workspace && python3 GPT_SoVITS/inference_webui.py en"'
+    depends_on:
+      core_ollama:
+        condition: service_healthy      
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+        limits:
+          cpus: '0.50'
+          memory: 8192M
+    logging:
+      <<: *default-logging
+      options:
+        tag: "core-tts-server/{{.Name}}" 
+    volumes:
+      - host_core_gptsovits_tts_storage_volume:/workspace         
+    networks:
+      - core_monitoring_network
+      - core_ai_network
+
+
   # Core Kokoro TTS Service
-  # Host Accessible at: http://localhost:$CORE_KOKORO_TTS_HOST_HTTP_PORT
-  # Web UI Accessible at: http://localhost:$CORE_KOKORO_WEBUI_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$CORE_KOKORO_TTS_HOST_HTTP_PORT
+  # Host Accessible at: http://localhost:${CORE_KOKORO_TTS_HOST_HTTP_PORT}
+  # Web UI Accessible at: http://localhost:${CORE_KOKORO_WEBUI_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_KOKORO_TTS_HOST_HTTP_PORT}
   # Healthcheck status: working
 
   core_kokoro_tts:
     container_name: core_kokoro_tts
-    image: ghcr.io/remsky/kokoro-fastapi-ui:$SERVICE_KOKORO_TTS_VERSION
+    image: ghcr.io/remsky/kokoro-fastapi-ui:${SERVICE_KOKORO_TTS_VERSION}
     labels:
-      - "local.service.name=Core - LLM Web UI: Kokoro TTS"
+      - "local.service.name=Core - LLM TTS and Web UI: Kokoro TTS"
       - "local.service.description=Core Kokoro TTS fast api for text-to-speech. Certain directories for this service are made available to the host machine for the purposes of data persistence."
       - "local.service.source.url=https://github.com/remsky/Kokoro-FastAPI"
       - "portainer.agent.stack=true"
     restart: unless-stopped
     env_file:
-      - $CORE_KOKORO_TTS_ENVIRONMENT_FILE
+      - ${CORE_KOKORO_TTS_ENVIRONMENT_FILE}
     ports:
-      - "$CORE_KOKORO_TTS_HOST_HTTP_PORT:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT"
-      - "$CORE_KOKORO_WEBUI_HOST_HTTP_PORT:$CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT"
+      - "${CORE_KOKORO_TTS_HOST_HTTP_PORT}:${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT}"
+      - "${CORE_KOKORO_WEBUI_HOST_HTTP_PORT}:${CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT}"
     healthcheck:  
-      test: ["CMD", "curl", "-f", "http://core_kokoro_tts:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT/health"]
+      test: ["CMD", "curl", "-f", "http://core_kokoro_tts:${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1068,7 +1196,7 @@ services:
       cd /app
       
       echo "Installing dependencies..."
-      apt-get update && apt-get install -y --no-install-recommends python3-pip python3-dev espeak-ng curl unzip git git-lfs libsndfile1
+      apt-get update && apt-get install -y --no-install-recommends python3-pip python3-dev espeak-ng apt-utils curl unzip git git-lfs libsndfile1
       apt-get clean
       rm -rf /var/lib/apt/lists/
       git lfs install
@@ -1086,7 +1214,7 @@ services:
       if [ -d "/app/Kokoro-82M/.git" ]; then
         echo "Removing any existing index.lock file..."
         rm -f /app/Kokoro-82M/.git/index.lock         
-        echo "Updating Kokoro-82M repository..."
+        echo "Updating Kokoro-82M repository from huggingface..."
         
         cd /app/Kokoro-82M
         if [ -d ".git" ]; then
@@ -1095,7 +1223,7 @@ services:
           git reset --hard origin/main || true
         fi
       else          
-        echo "Cloning Kokoro-82M repository..."
+        echo "Cloning Kokoro-82M repository from huggingface..."
         cd /app
         git clone https://huggingface.co/hexgrad/Kokoro-82M
         echo "Downloading af_irulan.pt voice..."
@@ -1106,9 +1234,9 @@ services:
       
       # Handle Kokoro-FastAPI repository
       if [ ! -d "/app/.github" ]; then
-        echo "Downloading and extracting Kokoro-FastAPI..."
+        echo "Downloading and extracting Kokoro-FastAPI from github..."
         cd /app
-        curl -L https://github.com/remsky/Kokoro-FastAPI/archive/refs/tags/v0.0.5.zip -o kokoro.zip &&         unzip -o kokoro.zip &&         cp -rf Kokoro-FastAPI-0.0.5/* . &&         cp -rf Kokoro-FastAPI-0.0.5/.[!.]* . 2>/dev/null || true &&         rm -rf Kokoro-FastAPI-0.0.5 kokoro.zip
+        curl -L https://github.com/remsky/Kokoro-FastAPI/archive/refs/tags/v0.0.5.zip -o kokoro.zip && unzip -o kokoro.zip && cp -rf Kokoro-FastAPI-0.0.5/* . && cp -rf Kokoro-FastAPI-0.0.5/.[!.]* . 2>/dev/null || true && rm -rf Kokoro-FastAPI-0.0.5 kokoro.zip
       fi
       
       echo "Installing requirements..."
@@ -1117,19 +1245,20 @@ services:
       su appuser -c "pip3 install --no-cache-dir torch==2.5.1 --extra-index-url https://download.pytorch.org/whl/cu121"
       su appuser -c "pip3 install --no-cache-dir loguru"
       
-      if [ -f "requirements.txt" ]; then
+      if [ -f "/app/requirements.txt" ]; then
         su appuser -c "pip3 install --no-cache-dir -r requirements.txt"
       fi
+
       su appuser -c "pip3 install --no-cache-dir pydantic_settings scipy soundfile munch transformers phonemizer"
       
       echo "Updating API URL..."
-      sed -i "s|API_URL = \"http://kokoro-tts:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT\"|API_URL = \"http://core_kokoro_tts:$CORE_KOKORO_TTS_CONTAINER_HTTP_PORT\"|" /app/ui/lib/config.py
+      sed -i "s|API_URL = \"http://kokoro-tts:${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT}\"|API_URL = \"http://core_kokoro_tts:${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT}\"|" /app/ui/lib/config.py
       
       echo "Starting api server and gradio ui..."
       cd /app
-      (su -s /bin/bash appuser -c "uvicorn api.src.main:app --host 0.0.0.0 --port $CORE_KOKORO_TTS_CONTAINER_HTTP_PORT --log-level debug" &)
+      (su -s /bin/bash appuser -c "uvicorn api.src.main:app --host 0.0.0.0 --port ${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT} --log-level debug" &)
       cd /app/ui
-      su appuser -c "python app.py"'
+      su appuser -c "python3 app.py"'
     deploy:
       resources:
         reservations:
@@ -1156,8 +1285,8 @@ services:
 # Production Services
 
   # Production PHP-fpm Apache2
-  # Host Accessible at: http://localhost:$PRODUCTION_PHPFPM_APACHE_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT
+  # Host Accessible at: http://localhost:${PRODUCTION_PHPFPM_APACHE_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT}
   # Healthcheck status: working
 
   production_phpfpm_apache:
@@ -1169,13 +1298,13 @@ services:
       - "portainer.agent.stack=true"  
     <<: *common_phpfpm_apache
     env_file:
-      - $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE
+      - ${PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE}
     ports:
-      - "$PRODUCTION_PHPFPM_APACHE_HOST_HTTP_PORT:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT"
-      - "$PRODUCTION_PHPFPM_APACHE_HOST_HTTPS_PORT:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTPS_PORT"
-      - "$PRODUCTION_PHPFPM_APACHE_HOST_HTTPS_PORT:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT/udp"
+      - "${PRODUCTION_PHPFPM_APACHE_HOST_HTTP_PORT}:${PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT}"
+      - "${PRODUCTION_PHPFPM_APACHE_HOST_HTTPS_PORT}:${PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTPS_PORT}"
+      - "${PRODUCTION_PHPFPM_APACHE_HOST_HTTPS_PORT}:${PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT}/udp"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://production_phpfpm_apache:$PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT/"]
+      test: ["CMD", "curl", "-f", "http://production_phpfpm_apache:${PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT}/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1194,8 +1323,8 @@ services:
 
 
   # Production Postgres
-  # Host Accessible at: http://localhost:$PRODUCTION_POSTGRES_HOST_TCP_PORT
-  # Docker Accessible at: http://localhost:$PRODUCTION_POSTGRES_CONTAINER_TCP_PORT
+  # Host Accessible at: http://localhost:${PRODUCTION_POSTGRES_HOST_TCP_PORT}
+  # Docker Accessible at: http://localhost:${PRODUCTION_POSTGRES_CONTAINER_TCP_PORT}
   # Healthcheck status: working
 
   production_postgres:
@@ -1207,9 +1336,9 @@ services:
       - "portainer.agent.stack=true"  
     <<: *common_postgres
     env_file:
-      - $PRODUCTION_POSTGRES_ENVIRONMENT_FILE
+      - ${PRODUCTION_POSTGRES_ENVIRONMENT_FILE}
     ports:
-      - "$PRODUCTION_POSTGRES_HOST_TCP_PORT:$PRODUCTION_POSTGRES_CONTAINER_TCP_PORT"
+      - "${PRODUCTION_POSTGRES_HOST_TCP_PORT}:${PRODUCTION_POSTGRES_CONTAINER_TCP_PORT}"
     logging:
       <<: *default-logging
       options:
@@ -1223,8 +1352,8 @@ services:
 
 
   # Production MariaDB
-  # Host Accessible at: http://localhost:$PRODUCTION_MARIADB_HOST_TCP_PORT
-  # Docker Accessible at: http://localhost:$PRODUCTION_MARIADB_CONTAINER_TCP_PORT
+  # Host Accessible at: http://localhost:${PRODUCTION_MARIADB_HOST_TCP_PORT}
+  # Docker Accessible at: http://localhost:${PRODUCTION_MARIADB_CONTAINER_TCP_PORT}
   # Healthcheck status: working
 
   production_mariadb:
@@ -1236,9 +1365,9 @@ services:
       - "portainer.agent.stack=true"  
     <<: *common_mariadb
     env_file:
-      - $PRODUCTION_MARIADB_ENVIRONMENT_FILE
+      - ${PRODUCTION_MARIADB_ENVIRONMENT_FILE}
     ports:
-      - "$PRODUCTION_MARIADB_HOST_TCP_PORT:$PRODUCTION_MARIADB_CONTAINER_TCP_PORT"
+      - "${PRODUCTION_MARIADB_HOST_TCP_PORT}:${PRODUCTION_MARIADB_CONTAINER_TCP_PORT}"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "production_mariadb"]
       interval: 30s
@@ -1258,8 +1387,8 @@ services:
 
 
   # Production Neo4j
-  # Host Accessible at: http://localhost:$PRODUCTION_NEO4J_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$PRODUCTION_NEO4J_CONTAINER_HTTP_PORT
+  # Host Accessible at: http://localhost:${PRODUCTION_NEO4J_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${PRODUCTION_NEO4J_CONTAINER_HTTP_PORT}
   # Healthcheck status: working
 
   production_neo4j:
@@ -1271,12 +1400,12 @@ services:
       - "portainer.agent.stack=true"  
     <<: *common_neo4j
     env_file:
-      - $PRODUCTION_NEO4J_ENVIRONMENT_FILE
+      - ${PRODUCTION_NEO4J_ENVIRONMENT_FILE}
     ports:
-      - "$PRODUCTION_NEO4J_HOST_HTTP_PORT:$PRODUCTION_NEO4J_CONTAINER_HTTP_PORT"
-      - "$PRODUCTION_NEO4J_HOST_BOLT_PORT:$PRODUCTION_NEO4J_CONTAINER_BOLT_PORT"
+      - "${PRODUCTION_NEO4J_HOST_HTTP_PORT}:${PRODUCTION_NEO4J_CONTAINER_HTTP_PORT}"
+      - "${PRODUCTION_NEO4J_HOST_BOLT_PORT}:${PRODUCTION_NEO4J_CONTAINER_BOLT_PORT}"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://production_neo4j:$PRODUCTION_NEO4J_CONTAINER_HTTP_PORT/browser/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://production_neo4j:${PRODUCTION_NEO4J_CONTAINER_HTTP_PORT}/browser/"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -1297,8 +1426,8 @@ services:
 # Development Services
 
   # Development PHP-fpm Apache2
-  # Host Accessible at: http://localhost:$DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT
+  # Host Accessible at: http://localhost:${DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT}
   # Healthcheck status: working
 
   development_phpfpm_apache:
@@ -1310,13 +1439,13 @@ services:
       - "portainer.agent.stack=true"  
     <<: *common_phpfpm_apache
     env_file:
-      - $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE
+      - ${DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE}
     ports:
-      - "$DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT"
-      - "$DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT"
-      - "$DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT/udp"
+      - "${DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT}:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT}"
+      - "${DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT}:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT}"
+      - "${DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT}:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT}/udp"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://development_phpfpm_apache:$DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT/"]
+      test: ["CMD", "curl", "-f", "http://development_phpfpm_apache:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT}/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1335,8 +1464,8 @@ services:
 
 
   # Development Postgres
-  # Host Accessible at: http://localhost:$DEVELOPMENT_POSTGRES_HOST_TCP_PORT
-  # Docker Accessible at: http://localhost:$DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT
+  # Host Accessible at: http://localhost:${DEVELOPMENT_POSTGRES_HOST_TCP_PORT}
+  # Docker Accessible at: http://localhost:${DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT}
   # Healthcheck status: working
 
   development_postgres:
@@ -1348,9 +1477,9 @@ services:
       - "portainer.agent.stack=true"  
     <<: *common_postgres
     env_file:
-      - $DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE
+      - ${DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE}
     ports:
-      - "$DEVELOPMENT_POSTGRES_HOST_TCP_PORT:$DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT"
+      - "${DEVELOPMENT_POSTGRES_HOST_TCP_PORT}:${DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT}"
     logging:
       <<: *default-logging
       options:
@@ -1364,8 +1493,8 @@ services:
 
 
   # Development MariaDB
-  # Host Accessible at: http://localhost:$DEVELOPMENT_MARIADB_HOST_TCP_PORT
-  # Docker Accessible at: http://localhost:$DEVELOPMENT_MARIADB_CONTAINER_TCP_PORT
+  # Host Accessible at: http://localhost:${DEVELOPMENT_MARIADB_HOST_TCP_PORT}
+  # Docker Accessible at: http://localhost:${DEVELOPMENT_MARIADB_CONTAINER_TCP_PORT}
   # Healthcheck status: working
 
   development_mariadb:
@@ -1377,9 +1506,9 @@ services:
       - "portainer.agent.stack=true"  
     <<: *common_mariadb
     env_file:
-      - $DEVELOPMENT_MARIADB_ENVIRONMENT_FILE
+      - ${DEVELOPMENT_MARIADB_ENVIRONMENT_FILE}
     ports:
-      - "$DEVELOPMENT_MARIADB_HOST_TCP_PORT:$DEVELOPMENT_MARIADB_CONTAINER_TCP_PORT"
+      - "${DEVELOPMENT_MARIADB_HOST_TCP_PORT}:${DEVELOPMENT_MARIADB_CONTAINER_TCP_PORT}"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "development_mariadb"]
       interval: 30s
@@ -1399,8 +1528,8 @@ services:
 
 
   # Development Neo4j
-  # Host Accessible at: http://localhost:$DEVELOPMENT_NEO4J_HOST_HTTP_PORT
-  # Docker Accessible at: http://localhost:$DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT
+  # Host Accessible at: http://localhost:${DEVELOPMENT_NEO4J_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT}
   # Healthcheck status: working
 
   development_neo4j:
@@ -1412,12 +1541,12 @@ services:
       - "portainer.agent.stack=true"  
     <<: *common_neo4j
     env_file:
-      - $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE
+      - ${DEVELOPMENT_NEO4J_ENVIRONMENT_FILE}
     ports:
-      - "$DEVELOPMENT_NEO4J_HOST_HTTP_PORT:$DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT"
-      - "$DEVELOPMENT_NEO4J_HOST_BOLT_PORT:$DEVELOPMENT_NEO4J_CONTAINER_BOLT_PORT"
+      - "${DEVELOPMENT_NEO4J_HOST_HTTP_PORT}:${DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT}"
+      - "${DEVELOPMENT_NEO4J_HOST_BOLT_PORT}:${DEVELOPMENT_NEO4J_CONTAINER_BOLT_PORT}"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://development_neo4j:$DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT/browser/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://development_neo4j:${DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT}/browser/"]
       interval: 30s
       timeout: 10s
       retries: 5
