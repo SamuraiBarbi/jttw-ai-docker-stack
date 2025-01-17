@@ -41,6 +41,7 @@ The script handles
      - am_gurney
      - af_irulan
    - Provides access to Kokoro TTS via API and Gradio UI
+   - Provides access to GPTSovits via API and Gradio UI
    - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
    - Set up and configuration of OpenWebUI with access to Ollama docker service for AI interactions
    - Set up and configuration of OpenWebUI docker to allow LLM web searches using SearxNG
@@ -307,6 +308,34 @@ If you for any reason run the script again in the future, you'll need to make th
    - Installs pre-configured with voice models
    - Supports Gradio UI for interactive generation of text-to-speech on port 8086
 
+8. **GPT-SOVITS TTS**
+   - Text-to-speech service
+   - Access: 
+     - API HTTP: http://localhost:9880
+     - Gradio UI HTTP: http://localhost:9872
+   - API Use:
+     - ```bash
+       curl -X POST "http://localhost:9880/tts" -H "Content-Type: application/json" -d '{
+         "text": "hehehe! oh, Hello Samurai!! how are you today? fine day huh? hahaha! sometimes people just aggravate me and it makes me so mad! whew, that was close!",
+         "text_lang": "en",
+         "ref_audio_path": "bf_emma.mp3",
+         "prompt_text": "Hey its Emma Watson. You know, the girl from Harry Potter?",
+         "prompt_lang": "en",
+         "text_split_method": "cut0",
+         "batch_size": 1,
+         "media_type": "wav",
+         "streaming_mode": false
+      }' --output "$HOME/Downloads/tts_output.wav"
+      ```
+   - Secrets Environment Variables File: $HOME/.docker/core/secrets/.gptsovits_tts.env
+   - Data Volume: $HOME/.docker/core/data/gptsovits_tts
+   - Project Page: https://github.com/RVC-Boss/GPT-SoVITS
+   - Docker Image: [breakstring/gpt-sovits:dev-e80abbc](https://hub.docker.com/r/breakstring/gpt-sovits)
+   - Persistent data storage
+   - Supports emotive text-to-speech generation via API on port 9880
+   - Installs pre-configured with models needed to perform inference and cloning
+   - Downloads a voice reference audio file that will play nice with GPT-SoVITS requirements
+   - Supports Gradio UI for interactive generation of text-to-speech on port 9872
 
 ### Production Services
 1. **PHP-fpm Apache2**
