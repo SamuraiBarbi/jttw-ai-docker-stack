@@ -325,8 +325,8 @@ If you for any reason run the script again in the future, you'll need to make th
          "batch_size": 1,
          "media_type": "wav",
          "streaming_mode": false
-      }' --output "$HOME/Downloads/tts_output.wav"
-      ```
+       }' --output "$HOME/Downloads/tts_output.wav"
+       ```
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.gptsovits_tts.env
    - Data Volume: $HOME/.docker/core/data/gptsovits_tts
    - Project Page: https://github.com/RVC-Boss/GPT-SoVITS
