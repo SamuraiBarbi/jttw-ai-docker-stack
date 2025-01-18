@@ -299,6 +299,17 @@ If you for any reason run the script again in the future, you'll need to make th
    - Access: 
      - API HTTP: http://localhost:8085
      - Gradio UI HTTP: http://localhost:8086
+   - API Use:
+     - Curl request to generate text-to-speech and download the resulting audio file
+       ```bash
+       curl -X POST http://localhost:8085/v1/audio/speech -H "Content-Type: application/json" -d '{
+         "model": "kokoro", 
+         "voice": "bf_isabella",
+         "speed": 1.25, 
+         "input": "A total of 931 inmates are currently working around the clock, cutting fire lines and removing fuel from behind structures to slow the spread of California’s devastating wildfires, according to the California Department of Corrections and Rehabilitation", 
+         "output_format": "mp3"
+       }' -o "$HOME/Downloads/kokoro_tts_output.wav"
+       ```
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.kokoro_tts.env
    - Data Volume: $HOME/.docker/core/data/kokoro_tts
    - Project Page: https://github.com/remsky/Kokoro-FastAPI
@@ -326,7 +337,7 @@ If you for any reason run the script again in the future, you'll need to make th
          "batch_size": 1,
          "media_type": "wav",
          "streaming_mode": false
-       }' --output "$HOME/Downloads/tts_output.wav"
+       }' -o "$HOME/Downloads/gptsovits_tts_output.wav"
        ```
      - Curl request to generate text-to-speech and play the resulting audio directly in terminal
        ```bash
