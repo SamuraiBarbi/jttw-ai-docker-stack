@@ -314,7 +314,8 @@ If you for any reason run the script again in the future, you'll need to make th
      - API HTTP: http://localhost:8087
      - Gradio UI HTTP: http://localhost:8088
    - API Use:
-     - ```bash
+     - Curl request to generate text-to-speech and download the resulting audio file
+       ```bash
        curl -X POST "http://localhost:8087/tts" -H "Content-Type: application/json" -d '{
          "text": "hehehe! oh, Hello Samurai!! how are you today? fine day huh? hahaha! sometimes people just aggravate me and it makes me so mad! whew, that was close!",
          "text_lang": "en",
@@ -326,6 +327,20 @@ If you for any reason run the script again in the future, you'll need to make th
          "media_type": "wav",
          "streaming_mode": false
        }' --output "$HOME/Downloads/tts_output.wav"
+       ```
+     - Curl request to generate text-to-speech and play the resulting audio directly in terminal
+       ```bash
+       curl -X POST "http://localhost:8087/tts" -H "Content-Type: application/json" -d '{
+         "text": "hehehe! oh, Hello Samurai!! how are you today? fine day huh? hahaha! sometimes people just aggravate me and it makes me so mad! whew, that was close!",
+         "text_lang": "en",
+         "ref_audio_path": "bf_emma.mp3",
+         "prompt_text": "Hey its Emma Watson. You know, the girl from Harry Potter?",
+         "prompt_lang": "en",
+         "text_split_method": "cut0",
+         "batch_size": 1,
+         "media_type": "wav",
+         "streaming_mode": false
+       }' | aplay
        ```
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.gptsovits_tts.env
    - Data Volume: $HOME/.docker/core/data/gptsovits_tts
