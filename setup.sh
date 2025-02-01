@@ -6,6 +6,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+TIMEZONE="TZ=America/New_York"
 SERVICE_PORTAINER_VERSION="2.21.4"
 SERVICE_SEARXNG_VERSION="2024.12.16-65c970bdf"
 SERVICE_PGADMIN_VERSION="8.14.0"
@@ -14,6 +15,7 @@ SERVICE_OLLAMA_VERSION="0.5.1"
 SERVICE_OPENWEBUI_VERSION="git-1dfb479"
 SERVICE_KOKORO_TTS_VERSION="v0.0.5"
 SERVICE_GPTSOVITS_TTS_VERSION="dev-e80abbc"
+SERVICE_F5_TTS_VERSION="main"
 SERVICE_PHPFPM_APACHE_VERSION="php8"
 SERVICE_POSTGRES_VERSION="12.22"
 SERVICE_MARIADB_VERSION="10.6"
@@ -41,102 +43,113 @@ PRODUCTION_DATA_PATH="$PRODUCTION_PATH/data"
 DEVELOPMENT_DATA_PATH="$DEVELOPMENT_PATH/data"
 
 # Define core service data path, environment file variables, and ports
+# Ports 8000-8099: Management UIs
 CORE_PORTAINER_DATA_PATH="$CORE_DATA_PATH/portainer"
 CORE_PORTAINER_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.portainer.env"
-CORE_PORTAINER_HOST_HTTP_PORT=9000
+CORE_PORTAINER_HOST_HTTP_PORT=8000
 CORE_PORTAINER_CONTAINER_HTTP_PORT=9000
-
-CORE_SEARXNG_DATA_PATH="$CORE_DATA_PATH/searxng"
-CORE_SEARXNG_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.searxng.env"
-CORE_SEARXNG_HOST_HTTP_PORT=8084
-CORE_SEARXNG_CONTAINER_HTTP_PORT=8080
 
 CORE_PGADMIN_DATA_PATH="$CORE_DATA_PATH/pgadmin"
 CORE_PGADMIN_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.pgadmin.env"
-CORE_PGADMIN_HOST_HTTP_PORT=8082
+CORE_PGADMIN_HOST_HTTP_PORT=8001
 CORE_PGADMIN_CONTAINER_HTTP_PORT=80
 
 CORE_PHPMYADMIN_DATA_PATH="$CORE_DATA_PATH/phpmyadmin"
 CORE_PHPMYADMIN_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.phpmyadmin.env"
-CORE_PHPMYADMIN_HOST_HTTP_PORT=8083
+CORE_PHPMYADMIN_HOST_HTTP_PORT=8002
 CORE_PHPMYADMIN_CONTAINER_HTTP_PORT=80
+
+# Ports 8100-8199: Search/AI
+CORE_SEARXNG_DATA_PATH="$CORE_DATA_PATH/searxng"
+CORE_SEARXNG_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.searxng.env"
+CORE_SEARXNG_HOST_HTTP_PORT=8100
+CORE_SEARXNG_CONTAINER_HTTP_PORT=8080
 
 CORE_OLLAMA_DATA_PATH="$CORE_DATA_PATH/ollama"
 CORE_OLLAMA_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.ollama.env"
-CORE_OLLAMA_HOST_HTTP_PORT=11434
+CORE_OLLAMA_HOST_HTTP_PORT=8101
 CORE_OLLAMA_CONTAINER_HTTP_PORT=11434
 
 CORE_OPENWEBUI_DATA_PATH="$CORE_DATA_PATH/openwebui"
 CORE_OPENWEBUI_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.openwebui.env"
-CORE_OPENWEBUI_HOST_HTTP_PORT=11435
+CORE_OPENWEBUI_HOST_HTTP_PORT=8102
 CORE_OPENWEBUI_CONTAINER_HTTP_PORT=8080
 
-
+# Ports 8200-8299: TTS Services
 CORE_KOKORO_TTS_DATA_PATH="$CORE_DATA_PATH/kokoro_tts"
 CORE_KOKORO_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.kokoro_tts.env"
-CORE_KOKORO_TTS_HOST_HTTP_PORT=8085
+CORE_KOKORO_TTS_HOST_HTTP_PORT=8200
 CORE_KOKORO_TTS_CONTAINER_HTTP_PORT=8880
-CORE_KOKORO_WEBUI_HOST_HTTP_PORT=8086
+CORE_KOKORO_WEBUI_HOST_HTTP_PORT=8201
 CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT=7860
-
 
 CORE_GPTSOVITS_TTS_DATA_PATH="$CORE_DATA_PATH/gptsovits_tts"
 CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.gptsovits_tts.env"
-CORE_GPTSOVITS_TTS_HOST_HTTP_PORT=8087
+CORE_GPTSOVITS_TTS_HOST_HTTP_PORT=8202
 CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT=9880
-CORE_GPTSOVITS_WEBUI_HOST_HTTP_PORT=8088
-CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT=9872
+CORE_GPTSOVITS_INFERENCEUI_HOST_HTTP_PORT=8203
+CORE_GPTSOVITS_INFERENCEUI_CONTAINER_HTTP_PORT=9872
+CORE_GPTSOVITS_WEBUI_HOST_HTTP_PORT=8204
+CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT=9874
 
-# breakstring/gpt-sovits:
+CORE_F5_TTS_DATA_PATH="$CORE_DATA_PATH/f5_tts"
+CORE_F5_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.f5_tts.env"
+CORE_F5_TTS_HOST_HTTP_PORT=8205
+CORE_F5_TTS_CONTAINER_HTTP_PORT=7860
+
 
 # Define production service data path and environment file variables
+# Ports 10000-10099: Production Web Services
 PRODUCTION_PHPFPM_APACHE_DATA_PATH="$PRODUCTION_DATA_PATH/phpfpm_apache"
 PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.phpfpm_apache.env" 
-PRODUCTION_PHPFPM_APACHE_HOST_HTTP_PORT=8080
+PRODUCTION_PHPFPM_APACHE_HOST_HTTP_PORT=10000
 PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTP_PORT=80
-PRODUCTION_PHPFPM_APACHE_HOST_HTTPS_PORT=8443
+PRODUCTION_PHPFPM_APACHE_HOST_HTTPS_PORT=10001
 PRODUCTION_PHPFPM_APACHE_CONTAINER_HTTPS_PORT=443
 
+# Ports 10100-10199: Production Databases Services
 PRODUCTION_POSTGRES_DATA_PATH="$PRODUCTION_DATA_PATH/postgres"
 PRODUCTION_POSTGRES_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.postgres.env"
-PRODUCTION_POSTGRES_HOST_TCP_PORT=5432
+PRODUCTION_POSTGRES_HOST_TCP_PORT=10100
 PRODUCTION_POSTGRES_CONTAINER_TCP_PORT=5432
 
 PRODUCTION_MARIADB_DATA_PATH="$PRODUCTION_DATA_PATH/mariadb"
 PRODUCTION_MARIADB_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.mariadb.env"
-PRODUCTION_MARIADB_HOST_TCP_PORT=3306
+PRODUCTION_MARIADB_HOST_TCP_PORT=10101
 PRODUCTION_MARIADB_CONTAINER_TCP_PORT=3306
 
 PRODUCTION_NEO4J_DATA_PATH="$PRODUCTION_DATA_PATH/neo4j"
 PRODUCTION_NEO4J_ENVIRONMENT_FILE="$PRODUCTION_SECRETS_PATH/.neo4j.env"
-PRODUCTION_NEO4J_HOST_HTTP_PORT=7474
+PRODUCTION_NEO4J_HOST_HTTP_PORT=10102
 PRODUCTION_NEO4J_CONTAINER_HTTP_PORT=7474
-PRODUCTION_NEO4J_HOST_BOLT_PORT=7687
+PRODUCTION_NEO4J_HOST_BOLT_PORT=10103
 PRODUCTION_NEO4J_CONTAINER_BOLT_PORT=7687
 
 # Define development service data path and environment file variables
+# Ports 20000-20099: Development Web Services
 DEVELOPMENT_PHPFPM_APACHE_DATA_PATH="$DEVELOPMENT_DATA_PATH/phpfpm_apache"
 DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.phpfpm_apache.env"
-DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT=8081
+DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT=20000
 DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT=80
-DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT=8444
+DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT=20001
 DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT=443
 
+# Ports 20100-20199: Development Databases Services
 DEVELOPMENT_POSTGRES_DATA_PATH="$DEVELOPMENT_DATA_PATH/postgres"
 DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.postgres.env"
-DEVELOPMENT_POSTGRES_HOST_TCP_PORT=5433
+DEVELOPMENT_POSTGRES_HOST_TCP_PORT=20100
 DEVELOPMENT_POSTGRES_CONTAINER_TCP_PORT=5432
 
 DEVELOPMENT_MARIADB_DATA_PATH="$DEVELOPMENT_DATA_PATH/mariadb"
 DEVELOPMENT_MARIADB_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.mariadb.env"
-DEVELOPMENT_MARIADB_HOST_TCP_PORT=3307
+DEVELOPMENT_MARIADB_HOST_TCP_PORT=20101
 DEVELOPMENT_MARIADB_CONTAINER_TCP_PORT=3306
 
 DEVELOPMENT_NEO4J_DATA_PATH="$DEVELOPMENT_DATA_PATH/neo4j"
 DEVELOPMENT_NEO4J_ENVIRONMENT_FILE="$DEVELOPMENT_SECRETS_PATH/.neo4j.env"
-DEVELOPMENT_NEO4J_HOST_HTTP_PORT=7475
+DEVELOPMENT_NEO4J_HOST_HTTP_PORT=20102
 DEVELOPMENT_NEO4J_CONTAINER_HTTP_PORT=7474
-DEVELOPMENT_NEO4J_HOST_BOLT_PORT=7688
+DEVELOPMENT_NEO4J_HOST_BOLT_PORT=20103
 DEVELOPMENT_NEO4J_CONTAINER_BOLT_PORT=7687
 
 # Logging function
@@ -176,7 +189,7 @@ create_project_structure() {
   sudo -u $USER mkdir -p $BASE_PATH/{core,production,development}/{data,secrets} || error "Failed to create base directories."
 
   # Create core service directories
-  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,searxng,pgadmin,phpmyadmin,ollama,openwebui,kokoro_tts,gptsovits_tts} || error "Failed to create core service directories."
+  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,pgadmin,phpmyadmin,searxng,ollama,openwebui,kokoro_tts,gptsovits_tts,f5_tts} || error "Failed to create core service directories."
   sudo -u $USER mkdir -p $CORE_PGADMIN_DATA_PATH/storage_pgadmin || error "Failed to create core PGAdmin directories."
   sudo -u $USER mkdir -p $CORE_OLLAMA_DATA_PATH/{data_models,data_config} || error "Failed to create core Ollama directories."
   sudo -u $USER mkdir -p $CORE_KOKORO_TTS_DATA_PATH/{data_src,data_models,data_ui} || error "Failed to create core Kokoro TTS directories."
@@ -213,16 +226,7 @@ generate_secrets() {
   if [ ! -f "$CORE_PORTAINER_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $CORE_PORTAINER_ENVIRONMENT_FILE || error "Failed to create core .portainer.env."
     echo "PORTAINER_ADMIN_PASSWORD=$(generate_random_string)" > $CORE_PORTAINER_ENVIRONMENT_FILE || error "Failed to write PORTAINER_ADMIN_PASSWORD to core .portainer.env."
-  fi
-
-  if [ ! -f "$CORE_SEARXNG_ENVIRONMENT_FILE" ]; then
-    sudo -u $USER touch $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to create core .searxng.env."
-    echo "SEARXNG_BASE_URL=http://localhost:8084" > $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write BASE_URL to core .searxng.env."
-    echo "INSTANCE_NAME=JTTW SearxNG" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write INSTANCE_NAME to core .searxng.env."
-    echo "UWSGI_WORKERS=4" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write UWSGI_WORKERS to core .searxng.env."
-    echo "UWSGI_THREADS=4" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write UWSGI_THREADS to core .searxng.env."
-    echo "SEARXNG_SEARCH_FORMATS=html,json" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write SEARXNG_SETTINGS_SEARCH__FORMATS to core .searxng.env."
-    echo "SEARXNG_SEARCH_DEFAULT_FORMAT=html" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write SEARXNG_SETTINGS_SEARCH__DEFAULT_FORMAT to core .searxng.env."
+    echo "TZ=$TIMEZONE" >> $CORE_PORTAINER_ENVIRONMENT_FILE || error "Failed to write TZ to core .portainer.env."
   fi
 
   if [ ! -f "$CORE_PGADMIN_ENVIRONMENT_FILE" ]; then
@@ -230,6 +234,7 @@ generate_secrets() {
     echo "PGADMIN_DEFAULT_EMAIL=pgadmin@jttw-ai-docker-stack.com" > $CORE_PGADMIN_ENVIRONMENT_FILE || error "Failed to write PGADMIN_DEFAULT_EMAIL to core .pgadmin.env."
     echo "PGADMIN_DEFAULT_PASSWORD=$(generate_random_string)" >> $CORE_PGADMIN_ENVIRONMENT_FILE || error "Failed to write PGADMIN_DEFAULT_PASSWORD to core .pgadmin.env."
     echo "MASTER_PASSWORD_REQUIRED=False" >> $CORE_PGADMIN_ENVIRONMENT_FILE || error "Failed to write MASTER_PASSWORD_REQUIRED to core .pgadmin.env."
+    echo "TZ=$TIMEZONE" >> $CORE_PGADMIN_ENVIRONMENT_FILE || error "Failed to write TZ to core .pgadmin.env."
   fi
 
   if [ ! -f "$CORE_PHPMYADMIN_ENVIRONMENT_FILE" ]; then    
@@ -241,6 +246,17 @@ generate_secrets() {
     # echo "PMA_CONTROLUSER=pma" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_CONTROLUSER to core .phpmyadmin.env."
     # echo "PMA_CONTROLPASS=$(generate_random_string)" >> $CORE_PHPMYADMIN_ENVIRONMENT_FILE || error "Failed to write PMA_CONTROLPASS to core .phpmyadmin.env."
   fi
+
+  if [ ! -f "$CORE_SEARXNG_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to create core .searxng.env."
+    echo "SEARXNG_BASE_URL=http://localhost:$CORE_SEARXNG_HOST_HTTP_PORT" > $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write BASE_URL to core .searxng.env."
+    echo "INSTANCE_NAME=JTTW SearxNG" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write INSTANCE_NAME to core .searxng.env."
+    echo "UWSGI_WORKERS=4" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write UWSGI_WORKERS to core .searxng.env."
+    echo "UWSGI_THREADS=4" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write UWSGI_THREADS to core .searxng.env."
+    echo "SEARXNG_SEARCH_FORMATS=html,json" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write SEARXNG_SETTINGS_SEARCH__FORMATS to core .searxng.env."
+    echo "SEARXNG_SEARCH_DEFAULT_FORMAT=html" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write SEARXNG_SETTINGS_SEARCH__DEFAULT_FORMAT to core .searxng.env."
+    echo "TZ=$TIMEZONE" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write TZ to core .searxng.env."
+  fi  
 
   if [ ! -f "$CORE_OLLAMA_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to create core .ollama.env."
@@ -259,7 +275,7 @@ generate_secrets() {
     echo "ENABLE_RAG_WEB_SEARCH=True" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write ENABLE_RAG_WEB_SEARCH to core .openwebui.env."
     echo "ENABLE_SEARCH_QUERY=True" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write ENABLE_SEARCH_QUERY to core .openwebui.env."
     echo "RAG_WEB_SEARCH_ENGINE=searxng" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_ENGINE to core .openwebui.env."
-    echo "SEARXNG_QUERY_URL=http://core_searxng:8080/search?q=<query>&format=json" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write SEARXNG_QUERY_URL to core .openwebui.env."
+    echo "SEARXNG_QUERY_URL=http://core_searxng:$CORE_SEARXNG_CONTAINER_HTTP_PORT/search?q=<query>&format=json" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write SEARXNG_QUERY_URL to core .openwebui.env."
     echo "RAG_WEB_SEARCH_RESULT_COUNT=5" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_RESULT_COUNT to core .openwebui.env."
     echo "RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write RAG_WEB_SEARCH_CONCURRENT_REQUESTS to core .openwebui.env."
     echo "AUDIO_TTS_ENGINE=openai" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_ENGINE to core .openwebui.env."
@@ -267,8 +283,7 @@ generate_secrets() {
     echo "AUDIO_TTS_OPENAI_API_KEY=key-to-success" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_API_KEY to core .openwebui.env."
     echo "AUDIO_TTS_MODEL=kokoro" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_MODEL to core .openwebui.env."
     echo "AUDIO_TTS_VOICE=bf_emma" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_VOICE to core .openwebui.env."
-    echo "AUDIO_TTS_SPLIT_ON=punctuation" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_SPLIT_ON to core .openwebui.env."
-    
+    echo "AUDIO_TTS_SPLIT_ON=punctuation" >> $CORE_OPENWEBUI_ENVIRONMENT_FILE || error "Failed to write AUDIO_TTS_SPLIT_ON to core .openwebui.env."    
   fi
 
   if [ ! -f "$CORE_KOKORO_TTS_ENVIRONMENT_FILE" ]; then
@@ -286,10 +301,21 @@ generate_secrets() {
     echo "is_half=False" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write is_half to core .gptsovits_tts.env."
     echo "is_share=False" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write is_share to core .gptsovits_tts.env."
     echo "DEBIAN_FRONTEND=noninteractive" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write DEBIAN_FRONTEND to core .gptsovits_tts.env."
-    echo "TZ=Etc/UTC" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write TZ to core .gptsovits_tts.env."
+    # echo "TZ=America/New_York" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write TZ to core .gptsovits_tts.env."
+  fi
+
+  if [ ! -f "$CORE_F5_TTS_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_F5_TTS_ENVIRONMENT_FILE || error "Failed to create core .f5_tts.env."
+    echo "PYTHONPATH=/workspace:/workspace/F5-TTS" >> $CORE_F5_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONPATH to core .f5_tts.env."
   fi
 
   # Production secrets
+  if [ ! -f "$PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to create production .phpfpm_apache.env."
+    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write PHP_FPM_PASSWORD to production .phpfpm_apache.env."
+    echo "APACHE2_PASSWORD=$(generate_random_string)" >> $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write APACHE2_PASSWORD to production .phpfpm_apache.env."     
+  fi
+
   if [ ! -f "$PRODUCTION_POSTGRES_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $PRODUCTION_POSTGRES_ENVIRONMENT_FILE || error "Failed to create production .postgres.env."
     echo "POSTGRES_USER=production_user" > $PRODUCTION_POSTGRES_ENVIRONMENT_FILE || error "Failed to write POSTGRES_USER to production .postgres.env."
@@ -308,16 +334,20 @@ generate_secrets() {
   if [ ! -f "$PRODUCTION_NEO4J_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $PRODUCTION_NEO4J_ENVIRONMENT_FILE || error "Failed to create production .neo4j.env."
     echo "NEO4J_AUTH=neo4j/$(generate_random_string)" > $PRODUCTION_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_AUTH to production .neo4j.env."    
-  fi
-
-  if [ ! -f "$PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE" ]; then
-    sudo -u $USER touch $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to create production .phpfpm_apache.env."
-    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write PHP_FPM_PASSWORD to production .phpfpm_apache.env."
-    echo "APACHE2_PASSWORD=$(generate_random_string)" >> $PRODUCTION_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write APACHE2_PASSWORD to production .phpfpm_apache.env." 
-    
+    echo "NEO4J_PLUGINS=[\"apoc\"]" >> $PRODUCTION_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_PLUGINS to production .neo4j.env."
+    echo "NEO4J_apoc_export_file_enabled=true" >> $PRODUCTION_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_apoc_export_file_enabled to production .neo4j.env."
+    echo "NEO4J_apoc_import_file_enabled=true" >> $PRODUCTION_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_apoc_import_file_enabled to production .neo4j.env."
+    echo "NEO4J_apoc_import_file_use__neo4j__config=true" >> $PRODUCTION_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_apoc_import_file_use__neo4j__config to production .neo4j.env."
+    echo "NEO4JLABS_PLUGINS=[\"apoc\"]" >> $PRODUCTION_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4JLABS_PLUGINS to production .neo4j.env."
   fi
 
   # Development secrets
+  if [ ! -f "$DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to create development .phpfpm_apache.env."
+    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write PHP_FPM_PASSWORD to development .phpfpm_apache.env."
+    echo "APACHE2_PASSWORD=$(generate_random_string)" >> $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write APACHE2_PASSWORD to development .phpfpm_apache.env."      
+  fi
+
   if [ ! -f "$DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE || error "Failed to create development .postgres.env."
     echo "POSTGRES_USER=development_user" > $DEVELOPMENT_POSTGRES_ENVIRONMENT_FILE || error "Failed to write POSTGRES_USER to development .postgres.env."
@@ -336,14 +366,13 @@ generate_secrets() {
   if [ ! -f "$DEVELOPMENT_NEO4J_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE || error "Failed to create development.neo4j.env."
     echo "NEO4J_AUTH=neo4j/$(generate_random_string)" > $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_AUTH to development .neo4j.env."
+    echo "NEO4J_PLUGINS=[\"apoc\"]" >> $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_PLUGINS to development .neo4j.env."
+    echo "NEO4J_apoc_export_file_enabled=true" >> $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_apoc_export_file_enabled to development .neo4j.env."
+    echo "NEO4J_apoc_import_file_enabled=true" >> $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_apoc_import_file_enabled to development .neo4j.env."
+    echo "NEO4J_apoc_import_file_use__neo4j__config=true" >> $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4J_apoc_import_file_use__neo4j__config to development .neo4j.env."
+    echo "NEO4JLABS_PLUGINS=[\"apoc\"]" >> $DEVELOPMENT_NEO4J_ENVIRONMENT_FILE || error "Failed to write NEO4JLABS_PLUGINS to development .neo4j.env."
   fi
 
-  if [ ! -f "$DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE" ]; then
-    sudo -u $USER touch $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to create development .phpfpm_apache.env."
-    echo "PHP_FPM_PASSWORD=$(generate_random_string)" > $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write PHP_FPM_PASSWORD to development .phpfpm_apache.env."
-    echo "APACHE2_PASSWORD=$(generate_random_string)" >> $DEVELOPMENT_PHPFPM_APACHE_ENVIRONMENT_FILE || error "Failed to write APACHE2_PASSWORD to development .phpfpm_apache.env."
-      
-  fi
 
   # Set specific permissions for secrets directories
   sudo -u $USER chmod -R 700 $BASE_PATH/*/secrets/ || error "Failed to set permissions for secrets directories."
@@ -356,7 +385,8 @@ create_docker_configs() {
   log "Creating Docker configuration files..."
 
   cat > docker-compose.yml << EOF
-# To stop the containers, run: sudo -S docker compose down --remove-orphans
+# To stop all of the containers, run: sudo -S docker compose down --remove-orphans
+# To stop a specific container, run: sudo -S docker compose stop core_f5_tts
 # To remove the containers, run: sudo -S docker compose down --remove-orphans && sudo -S docker system prune -af
 # To list the containers, run: sudo -S docker ps -a && echo '=== Images ===' && echo darkness | sudo -S docker images && echo '=== Networks ===' && echo darkness | sudo -S docker network ls
 # To remove all persisted volume data, run: sudo rm -rf ${BASE_PATH}
@@ -386,12 +416,6 @@ volumes:
       type: none
       device: ${CORE_PORTAINER_DATA_PATH}/
       o: bind
-  host_core_searxng_storage_volume:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${CORE_SEARXNG_DATA_PATH}/
-      o: bind
   host_core_pgadmin_storage_volume:
     driver: local
     driver_opts:
@@ -404,6 +428,12 @@ volumes:
       type: none
       device: ${CORE_PHPMYADMIN_DATA_PATH}/
       o: bind
+  host_core_searxng_storage_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${CORE_SEARXNG_DATA_PATH}/
+      o: bind      
   host_core_ollama_data_models_volume:
     driver: local
     driver_opts:
@@ -445,6 +475,12 @@ volumes:
     driver_opts:
       type: none
       device: ${CORE_GPTSOVITS_TTS_DATA_PATH}/
+      o: bind
+  host_core_f5_tts_storage_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${CORE_F5_TTS_DATA_PATH}/
       o: bind
 
 
@@ -682,88 +718,6 @@ services:
       - core_monitoring_network
 
 
-  # Core SearxNG Service
-  ## Host Accessible at: http://localhost:${CORE_SEARXNG_HOST_HTTP_PORT}
-  # Docker Accessible at: http://localhost:${CORE_SEARXNG_CONTAINER_HTTP_PORT}
-  # Healthcheck status: working
-
-  core_searxng:
-    container_name: core_searxng
-    image: searxng/searxng:${SERVICE_SEARXNG_VERSION}
-    restart: unless-stopped
-    user: "${HOST_USER_UID}:${HOST_USER_GID}"
-    labels:
-      - "local.service.name=Core - Search Engine: SearxNG"
-      - "local.service.description=Core SearxNG search engine for searching the web. Certain directories for this service are made available to the host machine for the purposes of data persistence."
-      - "local.service.source.url=https://github.com/searxng/searxng"
-      - "portainer.agent.stack=true"  
-    env_file:
-      - ${CORE_SEARXNG_ENVIRONMENT_FILE}     
-    ports:
-      - "${CORE_SEARXNG_HOST_HTTP_PORT}:${CORE_SEARXNG_CONTAINER_HTTP_PORT}" 
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://core_searxng:${CORE_SEARXNG_CONTAINER_HTTP_PORT}/"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-    entrypoint: /bin/sh
-    command: |
-      -c '
-      # Start searxng first to create settings.yml
-      /usr/local/searxng/dockerfiles/docker-entrypoint.sh &
-      
-      # Wait for settings file to exist
-      while [ ! -f "/etc/searxng/settings.yml" ]; do
-        echo "Waiting for settings.yml to be created..."
-        sleep 2
-      done
-      
-      # Give it a moment to finish writing
-      sleep 2
-      
-      # Check if json format is in the file
-      if ! grep -q "^    - json" "/etc/searxng/settings.yml"; then
-        echo "Adding json format to settings.yml..."
-        # If formats section exists, append json to it
-        if grep -q "^  formats:" "/etc/searxng/settings.yml"; then
-          sed -i "/^  formats:/a\\    - json" "/etc/searxng/settings.yml"
-        else
-          # If formats section doesnt exist, add it with proper YAML formatting
-          echo "  formats:" >> "/etc/searxng/settings.yml"
-          echo "    - html" >> "/etc/searxng/settings.yml"
-          echo "    - json" >> "/etc/searxng/settings.yml"
-        fi
-        echo "Successfully added json format"
-        
-        # Restart the service to apply changes
-        echo "Restarting searxng to apply changes..."
-        killall -s SIGTERM uwsgi
-        sleep 2
-        exec /usr/local/searxng/dockerfiles/docker-entrypoint.sh
-      else
-        echo "json format already exists in settings.yml"
-        # Keep the container running
-        wait
-      fi'
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-    logging:
-      <<: *default-logging
-      options:
-        tag: "core-search/{{.Name}}" 
-    volumes:
-      - host_core_searxng_storage_volume:/etc/searxng:rw         
-    networks:
-      - core_monitoring_network
-      - core_ai_network
-      - production_app_network
-      - development_app_network  
-
-
   # Core PGAdmin Service
   # Host Accessible at: http://localhost:${CORE_PGADMIN_HOST_HTTP_PORT}
   # Docker Accessible at: http://localhost:${CORE_PGADMIN_CONTAINER_HTTP_PORT}
@@ -862,6 +816,88 @@ services:
       - development_db_network
 
 
+  # Core SearxNG Service
+  ## Host Accessible at: http://localhost:${CORE_SEARXNG_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_SEARXNG_CONTAINER_HTTP_PORT}
+  # Healthcheck status: working
+
+  core_searxng:
+    container_name: core_searxng
+    image: searxng/searxng:${SERVICE_SEARXNG_VERSION}
+    restart: unless-stopped
+    user: "${HOST_USER_UID}:${HOST_USER_GID}"
+    labels:
+      - "local.service.name=Core - Search Engine: SearxNG"
+      - "local.service.description=Core SearxNG search engine for searching the web. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.source.url=https://github.com/searxng/searxng"
+      - "portainer.agent.stack=true"  
+    env_file:
+      - ${CORE_SEARXNG_ENVIRONMENT_FILE}     
+    ports:
+      - "${CORE_SEARXNG_HOST_HTTP_PORT}:${CORE_SEARXNG_CONTAINER_HTTP_PORT}" 
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://core_searxng:${CORE_SEARXNG_CONTAINER_HTTP_PORT}/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    entrypoint: /bin/sh
+    command: |
+      -c '
+      # Start searxng first to create settings.yml
+      /usr/local/searxng/dockerfiles/docker-entrypoint.sh &
+      
+      # Wait for settings file to exist
+      while [ ! -f "/etc/searxng/settings.yml" ]; do
+        echo "Waiting for settings.yml to be created..."
+        sleep 2
+      done
+      
+      # Give it a moment to finish writing
+      sleep 2
+      
+      # Check if json format is in the file
+      if ! grep -q "^    - json" "/etc/searxng/settings.yml"; then
+        echo "Adding json format to settings.yml..."
+        # If formats section exists, append json to it
+        if grep -q "^  formats:" "/etc/searxng/settings.yml"; then
+          sed -i "/^  formats:/a\\    - json" "/etc/searxng/settings.yml"
+        else
+          # If formats section doesnt exist, add it with proper YAML formatting
+          echo "  formats:" >> "/etc/searxng/settings.yml"
+          echo "    - html" >> "/etc/searxng/settings.yml"
+          echo "    - json" >> "/etc/searxng/settings.yml"
+        fi
+        echo "Successfully added json format"
+        
+        # Restart the service to apply changes
+        echo "Restarting searxng to apply changes..."
+        killall -s SIGTERM uwsgi
+        sleep 2
+        exec /usr/local/searxng/dockerfiles/docker-entrypoint.sh
+      else
+        echo "json format already exists in settings.yml"
+        # Keep the container running
+        wait
+      fi'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    logging:
+      <<: *default-logging
+      options:
+        tag: "core-search/{{.Name}}" 
+    volumes:
+      - host_core_searxng_storage_volume:/etc/searxng:rw         
+    networks:
+      - core_monitoring_network
+      - core_ai_network
+      - production_app_network
+      - development_app_network  
+
+
   # Core Ollama Service
   # Host Accessible at: http://localhost:${CORE_OLLAMA_HOST_HTTP_PORT}
   # Docker Accessible at: http://localhost:${CORE_OLLAMA_CONTAINER_HTTP_PORT}
@@ -898,33 +934,33 @@ services:
         max_attempts=30
         attempt=1
         echo "Waiting for Ollama server to be ready..."
-        while [ \$attempt -le \$max_attempts ]; do
+        while [ $\$attempt -le $\$max_attempts ]; do
           if check_server; then
             echo "Ollama server is ready!"
             return 0
           fi
-          echo "Attempt \$attempt/\$max_attempts: Server not ready, waiting..."
+          echo "Attempt $\$attempt/$\$max_attempts: Server not ready, waiting..."
           sleep 10
-          attempt=\$((attempt + 1))
+          attempt=$\$((attempt + 1))
         done
         echo "Failed to connect to Ollama server after multiple attempts"
         return 1
       }
       
       download_model() {
-        local model="\$1"
+        local model="$\$1"
         local max_retries=3
         local retry=1
         
-        while [ \$retry -le \$max_retries ]; do
-          echo \"Downloading model '\$model' - Attempt \$retry of \$max_retries...\"
-          if /bin/ollama pull "\$model"; then
-            echo \"Successfully downloaded model '\$model'\"
+        while [ $\$retry -le $\$max_retries ]; do
+          echo \"Downloading model '$\$model' - Attempt $\$retry of $\$max_retries...\"
+          if /bin/ollama pull "$\$model"; then
+            echo \"Successfully downloaded model '$\$model'\"
             return 0
           fi
-          echo \"Failed to download model '\$model' - Attempt \$retry\"
+          echo \"Failed to download model '$\$model' - Attempt $\$retry\"
           retry=\$((retry + 1))
-          [ \$retry -le \$max_retries ] && sleep 5
+          [ $\$retry -le $\$max_retries ] && sleep 5
         done
         return 1      
       }
@@ -992,14 +1028,14 @@ services:
       fi      
 
       # Report final status
-      if [ "\${download_errors}" = "0" ]; then
+      if [ "$\$download_errors" = "0" ]; then
         echo "All models downloaded successfully!"
       else
-        echo "Warning: \${download_errors} model(s) failed to download"
+        echo "Warning: $\$download_errors model(s) failed to download"
       fi
       
       # Keep container running
-      wait \$server_pid'
+      wait $\$server_pid'
     # runtime: nvidia
     deploy:
       resources:
@@ -1143,6 +1179,7 @@ services:
       fi
       
       echo "Installing requirements..."
+      su appuser -c "PATH=/home/appuser/.local/bin:\$PATH"
       su appuser -c "python3 -m pip install --upgrade pip"
       su appuser -c "pip3 cache purge"
       su appuser -c "pip3 install --no-cache-dir torch==2.5.1 --extra-index-url https://download.pytorch.org/whl/cu121"
@@ -1204,10 +1241,10 @@ services:
       - ${CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE}
     ports:
       - "${CORE_GPTSOVITS_TTS_HOST_HTTP_PORT}:${CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT}"
-      # - "9871:9871"
-      - "${CORE_GPTSOVITS_WEBUI_HOST_HTTP_PORT}:${CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT}"
+      - "${CORE_GPTSOVITS_INFERENCEUI_HOST_HTTP_PORT}:${CORE_GPTSOVITS_INFERENCEUI_CONTAINER_HTTP_PORT}"
+      - "${CORE_GPTSOVITS_WEBUI_HOST_HTTP_PORT}:${CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT}"      
+      # - "9871:9871"      
       # - "9873:9873"
-      # - "9874:9874"
     healthcheck:  
       test: ["CMD", "curl", "-f", "http://core_gptsovits_tts:${CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT}/"]
       interval: 30s
@@ -1231,10 +1268,10 @@ services:
       chown -R appuser:appuser /workspace
 
       # Killing processes on ports...
-      for port in ${CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT} 9871 ${CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT} 9873 9874; do
-        pid=\$(lsof -t -i :"\$port" 2>/dev/null)
-        if [ ! -z "\$pid" ]; then
-          kill -9 "\$pid"
+      for port in ${CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT} 9871 ${CORE_GPTSOVITS_INFERENCEUI_CONTAINER_HTTP_PORT} 9873 ${CORE_GPTSOVITS_WEBUI_CONTAINER_HTTP_PORT}; do
+        pid=\$(lsof -t -i :"$\$port" 2>/dev/null)
+        if [ ! -z "$\$pid" ]; then
+          kill -9 "$\$pid"
         fi
       done 
 
@@ -1253,24 +1290,22 @@ services:
       fi
 
       echo "Installing requirements..."
-      
+      su appuser -c "export PATH=/home/appuser/.local/bin:\$PATH"
       su appuser -c "python3 -m pip install --upgrade pip"
       su appuser -c "pip3 cache purge"
 
-      if [ -f "/workspace/requirements.txt" ]; then        
-        su appuser -c "cd /workspace && pip3 install --no-cache-dir -r requirements.txt"
+      if [ -f "/workspace/requirements.txt" ]; then  
+        su appuser -c "cd /workspace && pip3 install --no-warn-script-location --no-cache-dir -r requirements.txt"
       fi
 
-      echo "Downloading reference voice bf_emma.mp3..."
-      su appuser -c "curl -L https://github.com/SamuraiBarbi/jttw-ai-docker-stack/raw/refs/heads/main/reference_voice_bf_emma.mp3 -o /workspace/bf_emma.mp3"
+      echo "Downloading reference voice reference_voices/bf_emma.mp3..."
+      su appuser -c "curl -L https://github.com/SamuraiBarbi/jttw-ai-docker-stack/raw/refs/heads/main/reference_voices/reference_voice_bf_emma.mp3 -o /workspace/reference_voices/bf_emma.mp3"
       chown -R appuser:appuser /workspace
       echo "Starting api server and gradio ui..."
-      PATH=/home/appuser/.local/bin:\$PATH
+      
       (su -s /bin/bash appuser -c "cd /workspace && python3 api_v2.py -a 0.0.0.0 -p ${CORE_GPTSOVITS_TTS_CONTAINER_HTTP_PORT} -c GPT_SoVITS/configs/tts_infer.yaml" &)
-      su appuser -c "cd /workspace && python3 GPT_SoVITS/inference_webui.py en"'
-    depends_on:
-      core_ollama:
-        condition: service_healthy      
+      su -s /bin/bash appuser -c "cd /workspace && python3 GPT_SoVITS/inference_webui.py en"
+      # su -s /bin/bash appuser -c "cd /workspace && python3 webui.py en"'  
     deploy:
       resources:
         reservations:
@@ -1286,6 +1321,99 @@ services:
         tag: "core-tts-server/{{.Name}}" 
     volumes:
       - host_core_gptsovits_tts_storage_volume:/workspace         
+    networks:
+      - core_monitoring_network
+      - core_ai_network
+
+
+  # Core F5 TTS Service
+  # Host Accessible at: http://localhost:${CORE_F5_TTS_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_F5_TTS_CONTAINER_HTTP_PORT}
+  # Healthcheck status: working
+
+  core_f5_tts:
+    container_name: core_f5_tts
+    image: ghcr.io/swivid/f5-tts:${SERVICE_F5_TTS_VERSION}
+    labels:
+      - "local.service.name=Core - LLM TTS and Web UI: F5 TTS"
+      - "local.service.description=Core F5 TTS for text-to-speech. Certain directories for this service are made available to the host machine for the purposes of data persistence."
+      - "local.service.source.url=https://github.com/SWivid/F5-TTS"
+      - "portainer.agent.stack=true"
+    restart: unless-stopped
+    env_file:
+      - ${CORE_F5_TTS_ENVIRONMENT_FILE}
+    ports:
+      - "${CORE_F5_TTS_HOST_HTTP_PORT}:${CORE_F5_TTS_CONTAINER_HTTP_PORT}"
+      # This would be the API server port but I've disabled it for now
+      # - "8090:9998"
+    healthcheck:  
+      test: ["CMD", "curl", "-f", "http://core_f5_tts:${CORE_F5_TTS_CONTAINER_HTTP_PORT}/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 480s
+    entrypoint: /bin/sh
+    command: |
+      -c '      
+      cd /workspace
+      echo "Installing dependencies..."
+      apt-get update \
+      && apt-get install -y --no-install-recommends python3-pip python3-dev \
+      && apt-get install -y iputils-ping wget curl man git less openssl libssl-dev unzip unar build-essential aria2 tmux vim \
+      && apt-get install -y openssh-server sox libsox-fmt-all libsox-fmt-mp3 libsndfile1-dev ffmpeg \
+      && apt-get install -y librdmacm1 libibumad3 librdmacm-dev libibverbs1 libibverbs-dev ibverbs-utils ibverbs-providers \
+      
+      rm -rf /var/lib/apt/lists/
+      apt-get clean
+
+      echo "Creating appuser..."
+      useradd -m -u 1000 appuser || true
+      
+      echo "Setting owner of workspace directory to appuser..."
+      chown -R appuser:appuser /workspace
+
+      # Killing processes on ports...
+      for port in ${CORE_F5_TTS_CONTAINER_HTTP_PORT} 9998; do
+        pid=\$(lsof -t -i :"$\$port" 2>/dev/null)
+        if [ ! -z "$\$pid" ]; then
+          kill -9 "$\$pid"
+        fi
+      done 
+
+      # Handle F5 TTS repository
+      echo "Downloading and extracting F5 TTS from github..."
+      cd /workspace/F5-TTS
+      curl -L https://github.com/SWivid/F5-TTS/archive/refs/heads/main.zip -o f5tts.zip && unzip -o f5tts.zip && cp -rf F5-TTS-main/* . && cp -rf F5-TTS-main/.[!.]* . 2>/dev/null || true && rm -rf F5-TTS-main f5tts.zip          
+      chown -R appuser:appuser /workspace
+
+      echo "Installing requirements..."
+      su appuser -c "cd /workspace/F5-TTS \
+      && export PATH=/home/appuser/.local/bin:\$PATH \
+      && python3 -m pip install --upgrade pip \
+      && pip3 cache purge \
+      && pip3 install --no-cache-dir torch==2.3.0+cu118 torchaudio==2.3.0+cu118 --extra-index-url https://download.pytorch.org/whl/cu118 \
+      && pip3 install -e . --no-cache-dir"
+
+      cd /workspace/F5-TTS && f5-tts_infer-gradio --port ${CORE_F5_TTS_CONTAINER_HTTP_PORT} --host 0.0.0.0          
+      # (cd /workspace/F5-TTS && python3 src/f5_tts/socket_server.py &)
+      ping 0.0.0.0 -n 1'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+        limits:
+          cpus: '0.50'
+          memory: 8192M
+    logging:
+      <<: *default-logging
+      options:
+        tag: "core-tts-server/{{.Name}}" 
+    volumes:
+      - host_core_f5_tts_storage_volume:/workspace 
+    tty: true  
+    stdin_open: true      
     networks:
       - core_monitoring_network
       - core_ai_network
