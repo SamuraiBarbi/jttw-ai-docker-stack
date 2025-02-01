@@ -218,61 +218,61 @@ If you for any reason run the script again in the future, you'll need to make th
 1. **Portainer**
    - Docker management UI
    - Access: 
-     - HTTP: http://localhost:8000
+     - HTTP: http://localhost:9000
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.portainer.env
    - Data Volume: $HOME/.docker/core/data/portainer
    - Project Page: https://github.com/portainer/portainer
    - Docker Image: [portainer/portainer-ce:2.21.4](https://hub.docker.com/layers/portainer/portainer-ce/2.21.4/images/sha256-a79ade2af4257a1a77e33fefdf06ec47606c0ce0dbff3146f6426c8a209908f4?context=explore)
    - Persistent data storage
-   - Supports Docker management via web ui on port 8000
+   - Supports Docker management via web ui on port 9000
    - Manages Docker containers and services
 
 2. **PGAdmin**
    - Web UI for Postgres database management
    - Access: 
-     - HTTP: http://localhost:8001
+     - HTTP: http://localhost:9001
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.pgadmin.env
    - Data Volume: $HOME/.docker/core/data/pgadmin
    - Project Page: https://github.com/pgadmin-org/pgadmin4
    - Docker Image: [dpage/pgadmin4:8.14.0](https://hub.docker.com/layers/dpage/pgadmin4/8.14.0/images/sha256-1053696a89c887a2a3ee6b24a7e2614cf68227d30ff8304e61da20bc71d4dd50)
    - Persistent data storage
-   - Manages both production and development Postgres instances on port 8001
+   - Manages both production and development Postgres instances on port 9001
    - Installs pre-configured with access to both production and development Postgres databases
 
 3. **PHPMyAdmin**
    - Web UI for MariaDB database management
    - Access: 
-     - HTTP: http://localhost:8002
+     - HTTP: http://localhost:9002
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.phpmyadmin.env
    - Data Volume: $HOME/.docker/core/data/phpmyadmin
    - Project Page: https://github.com/phpmyadmin/phpmyadmin
    - Docker Image: [phpmyadmin/phpmyadmin:5.2.1](https://hub.docker.com/layers/phpmyadmin/phpmyadmin/5.2.1/images/sha256-67ba2550fd004399ab0b95b64021a88ea544011e566a9a1995180a3decb6410d)
    - Persistent data storage
-   - Manages both production and development MariaDB instances on port 8002
+   - Manages both production and development MariaDB instances on port 9002
    - Installs pre-configured with access to production and development MariaDB databases
 
 4. **SearxNG**
    - Privacy-respecting search engine
    - Access: 
-     - HTTP: http://localhost:8100
+     - HTTP: http://localhost:9100
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.searxng.env
    - Data Volume: $HOME/.docker/core/data/searxng
    - Project Page: https://github.com/searxng/searxng
    - Docker Image: [searxng/searxng:2024.12.16-65c970bdf](https://hub.docker.com/layers/searxng/searxng/2024.12.16-65c970bdf/images/sha256-4a13ed45abe2546765d2def2b23292ae46646c50d647758895ccea629f668a9c)
    - Persistent data storage
-   - Supports fast near real-time privacy-respecting web searches on port 8100
+   - Supports fast near real-time privacy-respecting web searches on port 9100
    - Installs pre-configured with support for both HTML and JSON search formats
 
 5. **Ollama**
    - Large Language Model (LLM) server
    - Access: 
-     - HTTP: http://localhost:8101
+     - HTTP: http://localhost:9101
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.ollama.env
    - Data Volume: $HOME/.docker/core/data/ollama
    - Project Page: https://github.com/ollama/ollama
    - Docker Image: [ollama/ollama:0.5.1](https://hub.docker.com/layers/ollama/ollama/0.5.1/images/sha256-bbe7b28a899f111df1de2ebd70de0f8c55746784038dd70d537c540df23f57c1)
    - Persistent data storage
-   - Supports LLMs for web applications on port 8101
+   - Supports LLMs for web applications on port 9101
    - Installs with support using multiple AI models including:
      - [mxbai-embed-large](https://ollama.com/library/mxbai-embed-large) for embedding/reading documents
      - [llama3.2:3b](https://ollama.com/library/llama3.2:3b) for chat
@@ -284,25 +284,25 @@ If you for any reason run the script again in the future, you'll need to make th
 6. **OpenWebUI**
    - Web UI for LLMs 
    - Access: 
-     - HTTP: http://localhost:8102
+     - HTTP: http://localhost:9102
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.openwebui.env
    - Data Volume: $HOME/.docker/core/data/openwebui
    - Project Page: https://github.com/open-webui/open-webui
    - Docker Image: [ghcr.io/open-webui/open-webui:git-1dfb479](https://github.com/open-webui/open-webui/pkgs/container/open-webui/331304257?tag=git-1dfb479)
    - Persistent data storage
-   - Integrates with Ollama for AI interactions on port 8102
+   - Integrates with Ollama for AI interactions on port 9102
    - Installs pre-configured with websearch enabled using SearxNG
    - Installs pre-configured with embedding enabled using mxbai-embed-large embedding model
 
 7. **Kokoro TTS**
    - Text-to-speech service
    - Access: 
-     - API HTTP: http://localhost:8200
-     - Gradio UI HTTP: http://localhost:8201
+     - API HTTP: http://localhost:9200
+     - Gradio UI HTTP: http://localhost:9201
    - API Use:
      - Curl request to generate text-to-speech and download the resulting audio file
        ```bash
-       curl -X POST http://localhost:8200/v1/audio/speech -H "Content-Type: application/json" -d '{
+       curl -X POST http://localhost:9200/v1/audio/speech -H "Content-Type: application/json" -d '{
          "model": "kokoro", 
          "voice": "bf_isabella",
          "speed": 1.25, 
@@ -315,19 +315,19 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/remsky/Kokoro-FastAPI
    - Docker Image: [remsky/kokoro-fastapi:latest](ghcr.io/remsky/kokoro-fastapi:latest)
    - Persistent data storage
-   - Supports fast near real-time text-to-speech generation via API on port 8085
+   - Supports fast near real-time text-to-speech generation via API on port 9200
    - Installs pre-configured with voice models
-   - Supports Gradio UI for interactive generation of text-to-speech on port 8086
+   - Supports Gradio UI for interactive generation of text-to-speech on port 9201
 
 8. **GPT-SOVITS TTS**
    - Text-to-speech service
    - Access: 
-     - API HTTP: http://localhost:8202
-     - Gradio UI HTTP: http://localhost:8204
+     - API HTTP: http://localhost:9202
+     - Gradio UI HTTP: http://localhost:9204
    - API Use:
      - Curl request to generate text-to-speech and download the resulting audio file
        ```bash
-       curl -X POST "http://localhost:8202/tts" -H "Content-Type: application/json" -d '{
+       curl -X POST "http://localhost:9202/tts" -H "Content-Type: application/json" -d '{
          "text": "hehehe! oh, Hello Samurai!! how are you today? fine day huh? hahaha! sometimes people just aggravate me and it makes me so mad! whew, that was close!",
          "text_lang": "en",
          "ref_audio_path": "bf_emma.mp3",
@@ -341,7 +341,7 @@ If you for any reason run the script again in the future, you'll need to make th
        ```
      - Curl request to generate text-to-speech and play the resulting audio directly in terminal
        ```bash
-       curl -X POST "http://localhost:8202/tts" -H "Content-Type: application/json" -d '{
+       curl -X POST "http://localhost:9202/tts" -H "Content-Type: application/json" -d '{
          "text": "hehehe! oh, Hello Samurai!! how are you today? fine day huh? hahaha! sometimes people just aggravate me and it makes me so mad! whew, that was close!",
          "text_lang": "en",
          "ref_audio_path": "bf_emma.mp3",
@@ -358,10 +358,10 @@ If you for any reason run the script again in the future, you'll need to make th
    - Project Page: https://github.com/RVC-Boss/GPT-SoVITS
    - Docker Image: [breakstring/gpt-sovits:dev-e80abbc](https://hub.docker.com/r/breakstring/gpt-sovits)
    - Persistent data storage
-   - Supports emotive text-to-speech generation via API on port 8202
+   - Supports emotive text-to-speech generation via API on port 9202
    - Installs pre-configured with models needed to perform inference and cloning
    - Downloads a voice reference audio file that will play nice with GPT-SoVITS requirements
-   - Supports Gradio UI for interactive generation of text-to-speech on port 8204
+   - Supports Gradio UI for interactive generation of text-to-speech on port 9204
 
 ### Production Services
 1. **PHP-fpm Apache2**
