@@ -12,8 +12,8 @@ SERVICE_SEARXNG_VERSION="2024.12.16-65c970bdf"
 SERVICE_PGADMIN_VERSION="8.14.0"
 SERVICE_PHPMYADMIN_VERSION="5.2.1"
 SERVICE_OLLAMA_VERSION="0.5.1"
-SERVICE_OPENWEBUI_VERSION="git-1dfb479"
-SERVICE_KOKORO_TTS_VERSION="v0.0.5"
+SERVICE_OPENWEBUI_VERSION="git-feffdf1"
+SERVICE_KOKORO_TTS_VERSION="v0.1.4"
 SERVICE_GPTSOVITS_TTS_VERSION="dev-e80abbc"
 SERVICE_F5_TTS_VERSION="main"
 SERVICE_PHPFPM_APACHE_VERSION="php8"
@@ -289,10 +289,13 @@ generate_secrets() {
   if [ ! -f "$CORE_KOKORO_TTS_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to create core .kokoro_tts.env."
     echo "PYTHONUNBUFFERED=1" > $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONUNBUFFERED to core .kokoro_tts.env."
-    echo "PYTHONPATH=/app:/app/Kokoro-82M" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONPATH to core .kokoro_tts.env."
-    echo "PATH=/home/appuser/.local/bin:\$PATH" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PATH to core .kokoro_tts.env."
+    echo "PYTHONPATH=/app:/app/api:/app/Kokoro-82M" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONPATH to core .kokoro_tts.env."
+    echo "PATH=/home/appuser/.local/bin:/app/.venv/bin:\$PATH" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PATH to core .kokoro_tts.env."    
     echo "GRADIO_WATCH=True" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write GRADIO_WATCH to core .kokoro_tts.env."
-    echo "PYTHONUNBUFFERED=1" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONUNBUFFERED to core .kokoro_tts.env."
+    echo "USE_GPU=true" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write USE_GPU to core .kokoro_tts.env."
+    echo "USE_ONNX=false" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write USE_ONNX to core .kokoro_tts.env."
+    echo "DOWNLOAD_PTH=true" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write DOWNLOAD_PTH to core .kokoro_tts.env."
+    echo "DOWNLOAD_ONNX=false" >> $CORE_KOKORO_TTS_ENVIRONMENT_FILE || error "Failed to write DOWNLOAD_ONNX to core .kokoro_tts.env."
   fi
 
   if [ ! -f "$CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE" ]; then
@@ -1111,7 +1114,7 @@ services:
 
   core_kokoro_tts:
     container_name: core_kokoro_tts
-    image: ghcr.io/remsky/kokoro-fastapi-ui:${SERVICE_KOKORO_TTS_VERSION}
+    image: ghcr.io/remsky/kokoro-fastapi-gpu:${SERVICE_KOKORO_TTS_VERSION}
     labels:
       - "local.service.name=Core - LLM TTS and Web UI: Kokoro TTS"
       - "local.service.description=Core Kokoro TTS fast api for text-to-speech. Certain directories for this service are made available to the host machine for the purposes of data persistence."
@@ -1128,77 +1131,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 300s      
-    entrypoint: /bin/sh
-    command: |
-      -c '
-      cd /app
-      
-      echo "Installing dependencies..."
-      apt-get update && apt-get install -y --no-install-recommends python3-pip python3-dev espeak-ng apt-utils curl unzip git git-lfs libsndfile1
-      apt-get clean
-      rm -rf /var/lib/apt/lists/
-      git lfs install
-      
-      echo "Creating appuser..."
-      useradd -m -u 1000 appuser || true
-      
-      echo "Setting owner of app directory to appuser..."
-      chown -R appuser:appuser /app
-      
-      echo "Checking and updating repositories..."  
-
-      # Handle Kokoro-82M repository   
-
-      if [ -d "/app/Kokoro-82M/.git" ]; then
-        echo "Removing any existing index.lock file..."
-        rm -f /app/Kokoro-82M/.git/index.lock         
-        echo "Updating Kokoro-82M repository from huggingface..."
-        
-        cd /app/Kokoro-82M
-        if [ -d ".git" ]; then
-          git config --global --add safe.directory /app/Kokoro-82M
-          git fetch origin
-          git reset --hard origin/main || true
-        fi
-      else          
-        echo "Cloning Kokoro-82M repository from huggingface..."
-        cd /app
-        git clone https://huggingface.co/hexgrad/Kokoro-82M
-        echo "Downloading af_irulan.pt voice..."
-        curl -L https://github.com/remsky/Kokoro-FastAPI/releases/download/v0.1.0/af_irulan.pt -o /app/Kokoro-82M/voices/af_irulan.pt
-        echo "Downloading am_gurney.pt voice..."
-        curl -L https://github.com/remsky/Kokoro-FastAPI/releases/download/v0.1.0/am_gurney.pt -o /app/Kokoro-82M/voices/am_gurney.pt
-      fi
-      
-      # Handle Kokoro-FastAPI repository
-      if [ ! -d "/app/.github" ]; then
-        echo "Downloading and extracting Kokoro-FastAPI from github..."
-        cd /app
-        curl -L https://github.com/remsky/Kokoro-FastAPI/archive/refs/tags/v0.0.5.zip -o kokoro.zip && unzip -o kokoro.zip && cp -rf Kokoro-FastAPI-0.0.5/* . && cp -rf Kokoro-FastAPI-0.0.5/.[!.]* . 2>/dev/null || true && rm -rf Kokoro-FastAPI-0.0.5 kokoro.zip
-      fi
-      
-      echo "Installing requirements..."
-      su appuser -c "PATH=/home/appuser/.local/bin:\$PATH"
-      su appuser -c "python3 -m pip install --upgrade pip"
-      su appuser -c "pip3 cache purge"
-      su appuser -c "pip3 install --no-cache-dir torch==2.5.1 --extra-index-url https://download.pytorch.org/whl/cu121"
-      su appuser -c "pip3 install --no-cache-dir loguru"
-      
-      if [ -f "/app/requirements.txt" ]; then
-        su appuser -c "pip3 install --no-cache-dir -r requirements.txt"
-      fi
-
-      su appuser -c "pip3 install --no-cache-dir pydantic_settings scipy soundfile munch transformers phonemizer"
-      
-      echo "Updating API URL..."
-      sed -i "s|API_URL = \"http://kokoro-tts:${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT}\"|API_URL = \"http://core_kokoro_tts:${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT}\"|" /app/ui/lib/config.py
-      
-      echo "Starting api server and gradio ui..."
-      cd /app
-      (su -s /bin/bash appuser -c "uvicorn api.src.main:app --host 0.0.0.0 --port ${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT} --log-level debug" &)
-      cd /app/ui
-      su appuser -c "python3 app.py"'
+      start_period: 300s  
     deploy:
       resources:
         reservations:
