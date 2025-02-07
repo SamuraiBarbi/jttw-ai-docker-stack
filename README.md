@@ -40,7 +40,7 @@ The script handles
      - [bm_lewis](https://github.com/remsky/Kokoro-FastAPI/raw/refs/heads/master/examples/voice_samples/speech_bm_lewis.mp3)
      - am_gurney
      - af_irulan
-   - Provides access to Kokoro TTS via API and Gradio UI
+   - Provides access to Kokoro TTS via API and Web UI ( Web UI does not like Firefox, use another browser )
    - Provides access to GPTSovits via API and Gradio UI
    - Set up and configuration of SearxNG docker to allow both HTML and JSON response formats for web searches
    - Set up and configuration of OpenWebUI with access to Ollama docker service for AI interactions
@@ -298,7 +298,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Text-to-speech service
    - Access: 
      - API HTTP: http://localhost:9200
-     - Gradio UI HTTP: http://localhost:9201
+     - Web UI HTTP: http://localhost:9200/web/
    - API Use:
      - Curl request to generate text-to-speech and download the resulting audio file
        ```bash
