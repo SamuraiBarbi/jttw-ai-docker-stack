@@ -317,13 +317,13 @@ If you for any reason run the script again in the future, you'll need to make th
    - Persistent data storage
    - Supports fast near real-time text-to-speech generation via API on port 9200
    - Installs pre-configured with voice models
-   - Supports Gradio UI for interactive generation of text-to-speech on port 9201
+   - Supports Webui UI for interactive generation of text-to-speech on port 9200 /web/ path
 
 8. **GPT-SOVITS TTS**
    - Text-to-speech service
    - Access: 
      - API HTTP: http://localhost:9202
-     - Gradio UI HTTP: http://localhost:9204
+     - Gradio UI HTTP: http://localhost:9203
    - API Use:
      - Curl request to generate text-to-speech and download the resulting audio file
        ```bash
@@ -361,7 +361,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Supports emotive text-to-speech generation via API on port 9202
    - Installs pre-configured with models needed to perform inference and cloning
    - Downloads a voice reference audio file that will play nice with GPT-SoVITS requirements
-   - Supports Gradio UI for interactive generation of text-to-speech on port 9204
+   - Supports Gradio UI for interactive generation of text-to-speech on port 9203
 
 ### Production Services
 1. **PHP-fpm Apache2**
