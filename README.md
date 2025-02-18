@@ -20,6 +20,8 @@ The script handles
      - Development directory: (`$HOME/.docker/development`)
      - Development secrets directory: (`$HOME/.docker/development/secrets`)
      - Development data directory: (`$HOME/.docker/development/data`)
+   - Initial LLM downloads for LLamaCPP docker upon docker up:
+     - [Llama-3.2-3B-Instruct](https://huggingface.co/mradermacher/Llama-3.2-3B-Instruct-GGUF) - For chat
    - Initial LLM downloads for Ollama docker upon docker up:
      - [llama3.2:3b](https://ollama.com/library/llama3.2:3b) - For chat
      - [phi3.5:3.8b](https://ollama.com/library/phi3.5:3.8b) - For chat
@@ -60,17 +62,21 @@ The script handles
      - core_remote_access_network - Core Remote Access Network is used for our remote access related services/docker containers ( In future updates Zrok, Caddy, Traefik )
      - core_ai_network - Core AI Network is used for our AI related services/docker containers
        - SearxNG
+       - LlamaCPP
        - Ollama
        - OpenWebUI
        - Kokoro TTS
+       - GPTSoVITS
      - production_app_network - Production App Network is used for our web application related services/docker containers
        - PHP Apache2
        - Postgres
        - MariaDB
        - Neo4j
        - SearxNG
+       - LlamaCPP
        - Ollama
        - Kokoro TTS
+       - GPTSoVITS
      - production_db_network - Production DB Network is used for our database related services/docker containers
        - Postgres
        - MariaDB
@@ -83,11 +89,14 @@ The script handles
        - MariaDB
        - Neo4j
        - SearxNG
+       - LlamaCPP
        - Ollama
        - Kokoro TTS
+       - GPTSoVITS
      - development_db_network - Development DB Network is used for our database related services/docker containers
        - Postgres
        - MariaDB
+       - Neo4j
        - Neo4j
        - PGAdmin
        - PHPMyAdmin
@@ -263,16 +272,46 @@ If you for any reason run the script again in the future, you'll need to make th
    - Supports fast near real-time privacy-respecting web searches on port 9100
    - Installs pre-configured with support for both HTML and JSON search formats
 
-5. **Ollama**
+5. **LLamaCPP**
+   - LLM server
+   - Access: 
+     - HTTP: http://localhost:9110
+   - Secrets Environment Variables File: $HOME/.docker/core/secrets/.llamacpp.env
+   - Data Volume: $HOME/.docker/core/data/llamacpp
+   - Project Page: https://github.com/ggml-org/llama.cpp
+   - Docker Image: [ghcr.io/ggml-org/llama.cpp:server-cuda-b4677](https://github.com/ggerganov/llama.cpp-publish-mirror/pkgs/container/llama.cpp/352298949?tag=server-cuda-b4677)
+   - Persistent data storage
+   - Supports LLMs for web applications on port 9110
+   - Installs with support using AI model
+      [llama3.2-3b-Instruct](https://huggingface.co/mradermacher/Llama-3.2-3B-Instruct-GGUF) for chat
+
+6. **Ollama**
    - Large Language Model (LLM) server
    - Access: 
-     - HTTP: http://localhost:9101
+     - HTTP: http://localhost:9111
+   - API Use:
+     - Curl request to generate a response from the language model:
+       ```bash     
+       curl -X POST http://localhost:9111/api/generate -d '{
+        "model": "llama3.2:3b",
+        "prompt": "Why is the sky blue?",
+        "stream": false
+       }'
+       ```
+     - Curl request to stream a response from the language model:
+       ```bash     
+       curl -X POST http://localhost:9111/api/generate -d '{
+        "model": "llama3.2:3b",
+        "prompt": "Why is the sky blue?",
+        "stream": true
+       }'
+       ```       
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.ollama.env
    - Data Volume: $HOME/.docker/core/data/ollama
    - Project Page: https://github.com/ollama/ollama
    - Docker Image: [ollama/ollama:0.5.1](https://hub.docker.com/layers/ollama/ollama/0.5.1/images/sha256-bbe7b28a899f111df1de2ebd70de0f8c55746784038dd70d537c540df23f57c1)
    - Persistent data storage
-   - Supports LLMs for web applications on port 9101
+   - Supports LLMs for web applications on port 9111
    - Installs with support using multiple AI models including:
      - [mxbai-embed-large](https://ollama.com/library/mxbai-embed-large) for embedding/reading documents
      - [llama3.2:3b](https://ollama.com/library/llama3.2:3b) for chat
@@ -281,24 +320,24 @@ If you for any reason run the script again in the future, you'll need to make th
      - [qwen2.5:14b](https://ollama.com/library/qwen2.5:14b) for chat
      - [hhao/qwen2.5-coder-tools:32b](https://ollama.com/library/hhao/qwen2.5-coder-tools:32b) for coding
 
-6. **OpenWebUI**
+7. **OpenWebUI**
    - Web UI for LLMs 
    - Access: 
-     - HTTP: http://localhost:9102
+     - HTTP: http://localhost:9120
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.openwebui.env
    - Data Volume: $HOME/.docker/core/data/openwebui
    - Project Page: https://github.com/open-webui/open-webui
    - Docker Image: [ghcr.io/open-webui/open-webui:git-1dfb479](https://github.com/open-webui/open-webui/pkgs/container/open-webui/331304257?tag=git-1dfb479)
    - Persistent data storage
-   - Integrates with Ollama for AI interactions on port 9102
+   - Integrates with Ollama for AI interactions on port 9120
    - Installs pre-configured with websearch enabled using SearxNG
    - Installs pre-configured with embedding enabled using mxbai-embed-large embedding model
 
-7. **Kokoro TTS**
+8. **Kokoro TTS**
    - Text-to-speech service
    - Access: 
      - API HTTP: http://localhost:9200
-     - Web UI HTTP: http://localhost:9200/web/
+     - Web UI HTTP: http://localhost:9201/web/
    - API Use:
      - Curl request to generate text-to-speech and download the resulting audio file
        ```bash
@@ -317,9 +356,9 @@ If you for any reason run the script again in the future, you'll need to make th
    - Persistent data storage
    - Supports fast near real-time text-to-speech generation via API on port 9200
    - Installs pre-configured with voice models
-   - Supports Webui UI for interactive generation of text-to-speech on port 9200 /web/ path
+   - Supports Webui UI for interactive generation of text-to-speech on port 9201 /web/ path
 
-8. **GPT-SOVITS TTS**
+9. **GPT-SOVITS TTS**
    - Text-to-speech service
    - Access: 
      - API HTTP: http://localhost:9202
