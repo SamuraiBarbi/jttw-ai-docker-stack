@@ -276,6 +276,14 @@ If you for any reason run the script again in the future, you'll need to make th
    - LLM server
    - Access: 
      - HTTP: http://localhost:9110
+   - API Use:
+     - Curl request to generate a response from the language model:
+       ```bash
+       curl -X POST http://localhost:9110/completion -d '{
+        "prompt": "why is the sky blue?",
+        "n_predict": 128
+       }'
+       ```
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.llamacpp.env
    - Data Volume: $HOME/.docker/core/data/llamacpp
    - Project Page: https://github.com/ggml-org/llama.cpp
