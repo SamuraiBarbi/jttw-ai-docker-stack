@@ -345,7 +345,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Text-to-speech service
    - Access: 
      - API HTTP: http://localhost:9200
-     - Web UI HTTP: http://localhost:9201/web/
+     - Web UI HTTP: http://localhost:9200/web/
    - API Use:
      - Curl request to generate text-to-speech and download the resulting audio file
        ```bash
@@ -360,11 +360,11 @@ If you for any reason run the script again in the future, you'll need to make th
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.kokoro_tts.env
    - Data Volume: $HOME/.docker/core/data/kokoro_tts
    - Project Page: https://github.com/remsky/Kokoro-FastAPI
-   - Docker Image: [remsky/kokoro-fastapi:latest](ghcr.io/remsky/kokoro-fastapi:latest)
+   - Docker Image: [ghcr.io/remsky/kokoro-fastapi-gpu:v0.1.4](https://github.com/remsky/Kokoro-FastAPI/pkgs/container/kokoro-fastapi-gpu/346371776?tag=v0.1.4)
    - Persistent data storage
    - Supports fast near real-time text-to-speech generation via API on port 9200
    - Installs pre-configured with voice models
-   - Supports Webui UI for interactive generation of text-to-speech on port 9201 /web/ path
+   - Supports Webui UI for interactive generation of text-to-speech on port 9200/web
 
 9. **GPT-SOVITS TTS**
    - Text-to-speech service
