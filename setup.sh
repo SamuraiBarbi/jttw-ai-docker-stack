@@ -11,6 +11,7 @@ SERVICE_PORTAINER_VERSION="2.21.4"
 SERVICE_SEARXNG_VERSION="2024.12.16-65c970bdf"
 SERVICE_PGADMIN_VERSION="8.14.0"
 SERVICE_PHPMYADMIN_VERSION="5.2.1"
+SERVICE_LLAMACPP_VERSION="server-cuda-b4677"
 SERVICE_OLLAMA_VERSION="0.5.1"
 SERVICE_OPENWEBUI_VERSION="git-feffdf1"
 SERVICE_KOKORO_TTS_VERSION="v0.1.4"
@@ -65,14 +66,19 @@ CORE_SEARXNG_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.searxng.env"
 CORE_SEARXNG_HOST_HTTP_PORT=9100
 CORE_SEARXNG_CONTAINER_HTTP_PORT=8080
 
+CORE_LLAMACPP_DATA_PATH="$CORE_DATA_PATH/llamacpp"
+CORE_LLAMACPP_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.llamacpp.env"
+CORE_LLAMACPP_HOST_HTTP_PORT=9110
+CORE_LLAMACPP_CONTAINER_HTTP_PORT=8080
+
 CORE_OLLAMA_DATA_PATH="$CORE_DATA_PATH/ollama"
 CORE_OLLAMA_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.ollama.env"
-CORE_OLLAMA_HOST_HTTP_PORT=9101
+CORE_OLLAMA_HOST_HTTP_PORT=9111
 CORE_OLLAMA_CONTAINER_HTTP_PORT=11434
 
 CORE_OPENWEBUI_DATA_PATH="$CORE_DATA_PATH/openwebui"
 CORE_OPENWEBUI_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.openwebui.env"
-CORE_OPENWEBUI_HOST_HTTP_PORT=9102
+CORE_OPENWEBUI_HOST_HTTP_PORT=9120
 CORE_OPENWEBUI_CONTAINER_HTTP_PORT=8080
 
 # Ports 9200-9299: TTS Services
@@ -187,8 +193,9 @@ create_project_structure() {
   sudo -u $USER mkdir -p $BASE_PATH/{core,production,development}/{data,secrets} || error "Failed to create base directories."
 
   # Create core service directories
-  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,pgadmin,phpmyadmin,searxng,ollama,openwebui,kokoro_tts,gptsovits_tts,f5_tts} || error "Failed to create core service directories."
+  sudo -u $USER mkdir -p $CORE_DATA_PATH/{portainer,pgadmin,phpmyadmin,searxng,llamacpp,ollama,openwebui,kokoro_tts,gptsovits_tts,f5_tts} || error "Failed to create core service directories."
   sudo -u $USER mkdir -p $CORE_PGADMIN_DATA_PATH/storage_pgadmin || error "Failed to create core PGAdmin directories."
+  sudo -u $USER mkdir -p $CORE_LLAMACPP_DATA_PATH/data_models || error "Failed to create core Llama directories."
   sudo -u $USER mkdir -p $CORE_OLLAMA_DATA_PATH/{data_models,data_config} || error "Failed to create core Ollama directories."
   sudo -u $USER mkdir -p $CORE_KOKORO_TTS_DATA_PATH/{data_src,data_models,data_ui} || error "Failed to create core Kokoro TTS directories."
 
@@ -255,6 +262,12 @@ generate_secrets() {
     echo "SEARXNG_SEARCH_DEFAULT_FORMAT=html" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write SEARXNG_SETTINGS_SEARCH__DEFAULT_FORMAT to core .searxng.env."
     echo "TZ=$TIMEZONE" >> $CORE_SEARXNG_ENVIRONMENT_FILE || error "Failed to write TZ to core .searxng.env."
   fi  
+
+  if [ ! -f "$CORE_LLAMACPP_ENVIRONMENT_FILE" ]; then
+    sudo -u $USER touch $CORE_LLAMACPP_ENVIRONMENT_FILE || error "Failed to create core .llamacpp.env."
+    echo "LLAMA_CUDA=1" > $CORE_LLAMACPP_ENVIRONMENT_FILE || error "Failed to write LLAMA_CUDA to core .llamacpp.env."
+    echo "LLAMA_CURL=1" >> $CORE_LLAMACPP_ENVIRONMENT_FILE || error "Failed to write LLAMA_CURL to core .llamacpp.env."
+  fi
 
   if [ ! -f "$CORE_OLLAMA_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $CORE_OLLAMA_ENVIRONMENT_FILE || error "Failed to create core .ollama.env."
@@ -434,7 +447,13 @@ volumes:
     driver_opts:
       type: none
       device: ${CORE_SEARXNG_DATA_PATH}/
-      o: bind      
+      o: bind    
+  host_core_llamacpp_data_models_volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${CORE_LLAMACPP_DATA_PATH}/data_models/
+      o: bind  
   host_core_ollama_data_models_volume:
     driver: local
     driver_opts:
@@ -635,6 +654,8 @@ x-common_neo4j: &common_neo4j
   image: neo4j:${SERVICE_NEO4J_VERSION}
   restart: unless-stopped
   depends_on:
+    core_llamacpp:
+      condition: service_healthy
     core_ollama:
       condition: service_healthy    
   deploy:
@@ -899,6 +920,63 @@ services:
       - development_app_network  
 
 
+  # Core Llama.cpp Service
+  # Host Accessible at: http://localhost:${CORE_LLAMACPP_HOST_HTTP_PORT}
+  # Docker Accessible at: http://localhost:${CORE_LLAMACPP_CONTAINER_HTTP_PORT}
+  # Healthcheck status: working
+
+  core_llamacpp:
+    container_name: core_llamacpp
+    image:  ghcr.io/ggml-org/llama.cpp:${SERVICE_LLAMACPP_VERSION}
+    restart: unless-stopped
+    labels:
+      - "local.service.name=Core - LLM Server: Llama.cpp"
+      - "local.service.description=Core Llama.cpp large language model. This is a server which performs inference."
+      - "local.service.source.url=https://github.com/ggml-org/llama.cpp"
+      - "portainer.agent.stack=true"
+    env_file:
+      - ${CORE_LLAMACPP_ENVIRONMENT_FILE}
+    ports:
+      - "${CORE_LLAMACPP_HOST_HTTP_PORT}:${CORE_LLAMACPP_CONTAINER_HTTP_PORT}"      
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://core_llamacpp:${CORE_LLAMACPP_CONTAINER_HTTP_PORT} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s   
+    entrypoint: /bin/sh
+    command: |
+      -c '
+      apt-get update && apt-get install -y --no-install-recommends wget curl
+      cd /models &&
+      if [ ! -f "/models/Llama-3.2-3B-Instruct.Q8_0.gguf" ]; then
+        wget https://huggingface.co/mradermacher/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct.Q8_0.gguf &&
+        chmod 0755 "/models/Llama-3.2-3B-Instruct.Q8_0.gguf" &&
+        echo "Model downloaded successfully"
+      fi &&
+      cd /app &&
+      ./llama-server -m /models/Llama-3.2-3B-Instruct.Q8_0.gguf --host 0.0.0.0 --port ${CORE_LLAMACPP_CONTAINER_HTTP_PORT} --n-gpu-layers 48'         
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+        limits:
+          memory: 64G
+    logging:
+      <<: *default-logging
+      options:
+        tag: "core-llm-server/{{.Name}}" 
+    volumes:
+      - host_core_llamacpp_data_models_volume:/var/model
+    networks:
+      - core_monitoring_network
+      - core_ai_network
+      - production_app_network
+      - development_app_network
+
   # Core Ollama Service
   # Host Accessible at: http://localhost:${CORE_OLLAMA_HOST_HTTP_PORT}
   # Docker Accessible at: http://localhost:${CORE_OLLAMA_CONTAINER_HTTP_PORT}
@@ -1010,23 +1088,23 @@ services:
         download_errors=\$((download_errors + 1))
       fi
 
-      echo "Downloading qwen2.5:7b..."
-      if ! /bin/ollama pull qwen2.5:7b; then
-        echo "Failed to download qwen2.5:7b"
-        download_errors=\$((download_errors + 1))
-      fi        
+      # echo "Downloading qwen2.5:7b..."
+      # if ! /bin/ollama pull qwen2.5:7b; then
+      #  echo "Failed to download qwen2.5:7b"
+      #  download_errors=\$((download_errors + 1))
+      # fi        
 
-      echo "Downloading qwen2.5:14b..."
-      if ! /bin/ollama pull qwen2.5:14b; then
-        echo "Failed to download qwen2.5:14b"
-        download_errors=\$((download_errors + 1))
-      fi      
+      # echo "Downloading qwen2.5:14b..."
+      # if ! /bin/ollama pull qwen2.5:14b; then
+      #   echo "Failed to download qwen2.5:14b"
+      #   download_errors=\$((download_errors + 1))
+      # fi      
 
-      echo "Downloading hhao/qwen2.5-coder-tools:32b..."
-      if ! /bin/ollama pull hhao/qwen2.5-coder-tools:32b; then
-        echo "Failed to download hhao/qwen2.5-coder-tools:32b"
-        download_errors=\$((download_errors + 1))
-      fi      
+      # echo "Downloading hhao/qwen2.5-coder-tools:32b..."
+      # if ! /bin/ollama pull hhao/qwen2.5-coder-tools:32b; then
+      #   echo "Failed to download hhao/qwen2.5-coder-tools:32b"
+      #   download_errors=\$((download_errors + 1))
+      # fi      
 
       # Report final status
       if [ "$\$download_errors" = "0" ]; then
@@ -1086,6 +1164,8 @@ services:
       retries: 3
       start_period: 40s
     depends_on:
+      core_llamacpp:
+        condition: service_healthy    
       core_ollama:
         condition: service_healthy      
     deploy:
@@ -1319,7 +1399,6 @@ services:
       && export PATH=/home/appuser/.local/bin:\$PATH \
       && python3 -m pip install --upgrade pip \
       && pip3 cache purge \
-      && pip3 install --no-cache-dir torch==2.3.0+cu118 torchaudio==2.3.0+cu118 --extra-index-url https://download.pytorch.org/whl/cu118 \
       && pip3 install -e . --no-cache-dir"
 
       cd /workspace/F5-TTS && f5-tts_infer-gradio --port ${CORE_F5_TTS_CONTAINER_HTTP_PORT} --host 0.0.0.0          
@@ -1508,7 +1587,7 @@ services:
     ports:
       - "${DEVELOPMENT_PHPFPM_APACHE_HOST_HTTP_PORT}:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT}"
       - "${DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT}:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT}"
-      - "${DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT}:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTPS_PORT}/udp"
+      - "${DEVELOPMENT_PHPFPM_APACHE_HOST_HTTPS_PORT}:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT}/udp"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://development_phpfpm_apache:${DEVELOPMENT_PHPFPM_APACHE_CONTAINER_HTTP_PORT}/"]
       interval: 30s
@@ -1731,4 +1810,4 @@ generate_secrets
 create_docker_configs
 
 log "Project setup complete!"
-log "To start the project, run: docker-compose up -d --build"
+log "To start the project, run: sudo -S docker compose up -d"
