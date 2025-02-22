@@ -287,7 +287,7 @@ If you for any reason run the script again in the future, you'll need to make th
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.llamacpp.env
    - Data Volume: $HOME/.docker/core/data/llamacpp
    - Project Page: https://github.com/ggml-org/llama.cpp
-   - Docker Image: [ghcr.io/ggml-org/llama.cpp:server-cuda-b4677](https://github.com/ggerganov/llama.cpp-publish-mirror/pkgs/container/llama.cpp/352298949?tag=server-cuda-b4677)
+   - Docker Image: [ghcr.io/ggerganov/llama.cpp:server-cuda-b4677](https://github.com/ggerganov/llama.cpp-publish-mirror/pkgs/container/llama.cpp/352298949?tag=server-cuda-b4677)
    - Persistent data storage
    - Supports LLMs for web applications on port 9110
    - Installs with support using AI model
