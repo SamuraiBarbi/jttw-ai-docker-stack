@@ -86,8 +86,6 @@ CORE_KOKORO_TTS_DATA_PATH="$CORE_DATA_PATH/kokoro_tts"
 CORE_KOKORO_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.kokoro_tts.env"
 CORE_KOKORO_TTS_HOST_HTTP_PORT=9200
 CORE_KOKORO_TTS_CONTAINER_HTTP_PORT=8880
-CORE_KOKORO_WEBUI_HOST_HTTP_PORT=9201
-CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT=7860
 
 CORE_GPTSOVITS_TTS_DATA_PATH="$CORE_DATA_PATH/gptsovits_tts"
 CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE="$CORE_SECRETS_PATH/.gptsovits_tts.env"
@@ -312,6 +310,7 @@ generate_secrets() {
   if [ ! -f "$CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE" ]; then
     sudo -u $USER touch $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to create core .gptsovits_tts.env."
     echo "PATH=/home/appuser/.local/bin:\$PATH" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write PATH to core .gptsovits_tts.env."
+    echo "PYTHONPATH=/workspace" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write PYTHONPATH to core .gptsovits_tts.env."
     echo "is_half=False" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write is_half to core .gptsovits_tts.env."
     echo "is_share=False" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write is_share to core .gptsovits_tts.env."
     echo "DEBIAN_FRONTEND=noninteractive" >> $CORE_GPTSOVITS_TTS_ENVIRONMENT_FILE || error "Failed to write DEBIAN_FRONTEND to core .gptsovits_tts.env."
@@ -927,7 +926,7 @@ services:
 
   core_llamacpp:
     container_name: core_llamacpp
-    image:  ghcr.io/ggml-org/llama.cpp:${SERVICE_LLAMACPP_VERSION}
+    image:  ghcr.io/ggerganov/llama.cpp:${SERVICE_LLAMACPP_VERSION}
     restart: unless-stopped
     labels:
       - "local.service.name=Core - LLM Server: Llama.cpp"
@@ -970,7 +969,7 @@ services:
       options:
         tag: "core-llm-server/{{.Name}}" 
     volumes:
-      - host_core_llamacpp_data_models_volume:/var/model
+      - host_core_llamacpp_data_models_volume:/models
     networks:
       - core_monitoring_network
       - core_ai_network
@@ -1186,7 +1185,7 @@ services:
 
   # Core Kokoro TTS Service
   # Host Accessible at: http://localhost:${CORE_KOKORO_TTS_HOST_HTTP_PORT}
-  # Web UI Accessible at: http://localhost:${CORE_KOKORO_WEBUI_HOST_HTTP_PORT}
+  # Web UI Accessible at: http://localhost:${CORE_KOKORO_TTS_HOST_HTTP_PORT}/web
   # Docker Accessible at: http://localhost:${CORE_KOKORO_TTS_HOST_HTTP_PORT}
   # Healthcheck status: working
 
@@ -1203,7 +1202,6 @@ services:
       - ${CORE_KOKORO_TTS_ENVIRONMENT_FILE}
     ports:
       - "${CORE_KOKORO_TTS_HOST_HTTP_PORT}:${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT}"
-      - "${CORE_KOKORO_WEBUI_HOST_HTTP_PORT}:${CORE_KOKORO_WEBUI_CONTAINER_HTTP_PORT}"
     healthcheck:  
       test: ["CMD", "curl", "-f", "http://core_kokoro_tts:${CORE_KOKORO_TTS_CONTAINER_HTTP_PORT}/health"]
       interval: 30s
@@ -1307,6 +1305,7 @@ services:
       fi
 
       echo "Downloading reference voice reference_voices/bf_emma.mp3..."
+      su appuser -c "mkdir -p /workspace/reference_voices"
       su appuser -c "curl -L https://github.com/SamuraiBarbi/jttw-ai-docker-stack/raw/refs/heads/main/reference_voices/reference_voice_bf_emma.mp3 -o /workspace/reference_voices/bf_emma.mp3"
       chown -R appuser:appuser /workspace
       echo "Starting api server and gradio ui..."
