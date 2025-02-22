@@ -357,6 +357,16 @@ If you for any reason run the script again in the future, you'll need to make th
          "output_format": "mp3"
        }' -o "$HOME/Downloads/kokoro_tts_output.wav"
        ```
+     - Curl request to generate text-to-speech and play the resulting audio directly in terminal. Requires ffmpeg and aplay
+       ```bash 
+       curl -X POST http://localhost:9200/v1/audio/speech -H "Content-Type: application/json" -d '{
+         "model": "kokoro", 
+         "voice": "bf_isabella",
+         "speed": 1.25, 
+         "input": "A total of 931 inmates are currently working around the clock, cutting fire lines and removing fuel from behind structures to slow the spread of California’s devastating wildfires, according to the California Department of Corrections and Rehabilitation", 
+         "output_format": "mp3"
+       }' | ffmpeg -i - -f wav - | aplay
+       ```
    - Secrets Environment Variables File: $HOME/.docker/core/secrets/.kokoro_tts.env
    - Data Volume: $HOME/.docker/core/data/kokoro_tts
    - Project Page: https://github.com/remsky/Kokoro-FastAPI
@@ -377,7 +387,7 @@ If you for any reason run the script again in the future, you'll need to make th
        curl -X POST "http://localhost:9202/tts" -H "Content-Type: application/json" -d '{
          "text": "hehehe! oh, Hello Samurai!! how are you today? fine day huh? hahaha! sometimes people just aggravate me and it makes me so mad! whew, that was close!",
          "text_lang": "en",
-         "ref_audio_path": "bf_emma.mp3",
+         "ref_audio_path": "/workspace/reference_voices/bf_emma.mp3",
          "prompt_text": "Hey its Emma Watson. You know, the girl from Harry Potter?",
          "prompt_lang": "en",
          "text_split_method": "cut0",
@@ -386,12 +396,12 @@ If you for any reason run the script again in the future, you'll need to make th
          "streaming_mode": false
        }' -o "$HOME/Downloads/gptsovits_tts_output.wav"
        ```
-     - Curl request to generate text-to-speech and play the resulting audio directly in terminal
+     - Curl request to generate text-to-speech and play the resulting audio directly in terminal. Requires aplay
        ```bash
        curl -X POST "http://localhost:9202/tts" -H "Content-Type: application/json" -d '{
          "text": "hehehe! oh, Hello Samurai!! how are you today? fine day huh? hahaha! sometimes people just aggravate me and it makes me so mad! whew, that was close!",
          "text_lang": "en",
-         "ref_audio_path": "bf_emma.mp3",
+         "ref_audio_path": "/workspace/reference_voices/bf_emma.mp3",
          "prompt_text": "Hey its Emma Watson. You know, the girl from Harry Potter?",
          "prompt_lang": "en",
          "text_split_method": "cut0",
